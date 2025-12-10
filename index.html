@@ -3,16 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FM-200 Calculation Results | Fire Safety Tools</title>
+    <meta name="description" content="Professional FM-200 Fire Suppression System Calculator">
+    <title>FM-200 System Calculator | Fire Safety Tools</title>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-376208036"></script>
-    <script>
-        window.dataLayer = window.dataLayer || [];
-        function gtag(){dataLayer.push(arguments);}
-        gtag('js', new Date());
-        gtag('config', 'G-376208036');
-    </script>
 </head>
 <body>
     <div id="appNotification" class="notification"></div>
@@ -25,8 +19,8 @@
                     <h1>FM-200 Calculator</h1>
                 </div>
                 <nav class="main-nav">
-                    <a href="index.html"><i class="fas fa-calculator"></i> Calculator</a>
-                    <a href="results.html" class="active"><i class="fas fa-chart-bar"></i> Results</a>
+                    <a href="index.html" class="active"><i class="fas fa-calculator"></i> Calculator</a>
+                    <a href="results.html"><i class="fas fa-chart-bar"></i> Results</a>
                     <a href="quotation.html"><i class="fas fa-file-invoice-dollar"></i> Quotation</a>
                     <button id="themeToggle" class="btn-icon"><i class="fas fa-moon"></i></button>
                 </nav>
@@ -37,137 +31,109 @@
     <main class="main-content">
         <div class="container">
             <div class="page-header">
-                <h1>Calculation Results for <span id="displayProjectName">...</span></h1>
-                <div>
-                    <button id="printResults" class="btn-icon btn-secondary"><i class="fas fa-print"></i> Print Report</button>
-                    <button id="shareResults" class="btn-icon btn-outline" style="display: none;"><i class="fas fa-share-alt"></i> Share</button>
-                    <a href="quotation.html" class="btn-primary"><i class="fas fa-file-invoice-dollar"></i> Generate Quotation</a>
+                <h1>FM-200 Budgetary Estimation Tool</h1>
+                <button id="expertMode" class="btn-icon btn-outline"><i class="fas fa-user-cog"></i> Expert Mode</button>
+            </div>
+
+            <div class="calculator-grid">
+                <div class="card form-card">
+                    <div class="card-header">
+                        <h2><i class="fas fa-ruler-combined"></i> Project & Room Data</h2>
+                        <div>
+                            <button id="saveTemplate" class="btn-icon btn-secondary"><i class="fas fa-save"></i> Save</button>
+                            <button id="resetBtn" class="btn-icon btn-danger"><i class="fas fa-sync-alt"></i> Reset</button>
+                        </div>
+                    </div>
+                    
+                    <form id="budgetForm">
+                        <fieldset class="input-section">
+                            <legend>Project Details</legend>
+                            <div class="input-group">
+                                <label for="projectName">Project Name</label>
+                                <input type="text" id="projectName" value="Data Center Project A" required>
+                            </div>
+                            <div class="input-group">
+                                <label for="clientLocation">Client/Location</label>
+                                <input type="text" id="clientLocation" value="Dubai, UAE" required>
+                            </div>
+                            <div class="input-group">
+                                <label for="currency">Output Currency</label>
+                                <select id="currency" required>
+                                    <option value="USD">USD - US Dollar</option>
+                                    <option value="EUR">EUR - Euro</option>
+                                    <option value="INR">INR - Indian Rupee</option>
+                                    <option value="AED" selected>AED - UAE Dirham</option>
+                                </select>
+                            </div>
+                        </fieldset>
+
+                        <fieldset class="input-section">
+                            <legend>Room Dimensions (Meters)</legend>
+                            <div class="input-grid">
+                                <div class="input-group">
+                                    <label for="roomLength">Length (m)</label>
+                                    <input type="number" id="roomLength" value="10" min="1" step="0.1" required>
+                                </div>
+                                <div class="input-group">
+                                    <label for="roomWidth">Width (m)</label>
+                                    <input type="number" id="roomWidth" value="8" min="1" step="0.1" required>
+                                </div>
+                                <div class="input-group">
+                                    <label for="roomHeight">Height (m)</label>
+                                    <input type="number" id="roomHeight" value="4" min="1" step="0.1" required>
+                                </div>
+                            </div>
+                        </fieldset>
+
+                        <fieldset class="input-section expert-only">
+                            <legend>Advanced Parameters (Expert Mode)</legend>
+                            <div class="input-group">
+                                <label for="equipmentVolume">Equipment Volume (m³)</label>
+                                <input type="number" id="equipmentVolume" value="5" min="0" step="0.1">
+                            </div>
+                            <div class="input-group">
+                                <label for="minTemperature">Min. Temperature (°C)</label>
+                                <input type="number" id="minTemperature" value="20" min="-20" step="1" required>
+                            </div>
+                            <div class="input-group">
+                                <label for="altitude">Altitude (m)</label>
+                                <input type="number" id="altitude" value="0" min="0" step="10">
+                            </div>
+                            <div class="input-group">
+                                <label for="safetyFactor">Safety Factor (%)</label>
+                                <input type="number" id="safetyFactor" value="107" min="100" max="150" step="1" required>
+                            </div>
+                            <div class="input-group">
+                                <label for="cylinderSize">Cylinder Size (kg)</label>
+                                <select id="cylinderSize" required>
+                                    <option value="54.4">54.4 kg (120 lb)</option>
+                                    <option value="27.2">27.2 kg (60 lb)</option>
+                                    <option value="108.8">108.8 kg (240 lb)</option>
+                                </select>
+                            </div>
+                        </fieldset>
+                        
+                        <button type="submit" class="btn-primary btn-lg"><i class="fas fa-chart-line"></i> Calculate FM-200 Requirements</button>
+                    </form>
+                </div>
+
+                <div class="card preview-card">
+                    <div class="card-header">
+                        <h2><i class="fas fa-tachometer-alt"></i> Quick Preview</h2>
+                    </div>
+                    <div id="quickPreviewMetrics" class="preview-content">
+                        <div class="preview-placeholder">
+                            <i class="fas fa-ruler-combined"></i> Enter dimensions to see preview
+                        </div>
+                    </div>
+                    
+                    <div class="card-footer">
+                        <div class="disclaimer-note">
+                            <i class="fas fa-info-circle"></i> Preview shows rough estimates. Use 'Calculate' for NFPA-compliant results.
+                        </div>
+                    </div>
                 </div>
             </div>
-            
-            <section id="calculationResults">
-                <p class="project-meta">Location: <span id="displayLocation">...</span> | <span id="calculationTimestamp">...</span></p>
-
-                <div class="card metrics-card">
-                    <div class="card-header">
-                        <h2><i class="fas fa-balance-scale"></i> Key System Requirements</h2>
-                    </div>
-                    <div class="specs-grid metrics-grid">
-                        <div class="metric-box">
-                            <span class="metric-label">Agent Required</span>
-                            <span class="metric-value" id="agentQuantity">0 kg</span>
-                        </div>
-                        <div class="metric-box">
-                            <span class="metric-label">Cylinders (Min.)</span>
-                            <span class="metric-value" id="cylinderCount">0 pcs</span>
-                        </div>
-                        <div class="metric-box">
-                            <span class="metric-label">Cylinder Size</span>
-                            <span class="metric-value" id="cylinderSizeDisplay">0 kg</span>
-                        </div>
-                        <div class="metric-box">
-                            <span class="metric-label">Discharge Nozzles</span>
-                            <span class="metric-value" id="nozzleCount">0 pcs</span>
-                        </div>
-                        <div class="metric-box">
-                            <span class="metric-label">Estimated Pipe Length</span>
-                            <span class="metric-value" id="pipingLength">0 m</span>
-                        </div>
-                        <div class="metric-box">
-                            <span class="metric-label">Floor Area</span>
-                            <span class="metric-value" id="floorArea">0 m²</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="card specs-card expert-only">
-                    <div class="card-header">
-                        <h2><i class="fas fa-cogs"></i> Technical Specifications (NFPA 2001)</h2>
-                    </div>
-                    <div class="specs-grid">
-                        <div class="spec-item">
-                            <span class="spec-label">Gross Volume:</span>
-                            <span class="spec-value" id="grossVolume">0 m³</span>
-                        </div>
-                        <div class="spec-item">
-                            <span class="spec-label">Net Volume:</span>
-                            <span class="spec-value" id="netVolume">0 m³</span>
-                        </div>
-                        <div class="spec-item">
-                            <span class="spec-label">Min. Temperature:</span>
-                            <span class="spec-value" id="minTemp">0 °C</span>
-                        </div>
-                        <div class="spec-item">
-                            <span class="spec-label">Altitude:</span>
-                            <span class="spec-value" id="altitudeM">0 m</span>
-                        </div>
-                        <div class="spec-item">
-                            <span class="spec-label">Min. Concentration:</span>
-                            <span class="spec-value" id="minConcentration">0 %</span>
-                        </div>
-                        <div class="spec-item">
-                            <span class="spec-label">Specific Vapor Vol. (S):</span>
-                            <span class="spec-value" id="specificVolume">0 m³/kg</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="results-grid">
-                    <div class="card chart-card">
-                        <div class="card-header">
-                            <h2><i class="fas fa-chart-pie"></i> Cost Breakdown</h2>
-                        </div>
-                        <div class="chart-container">
-                            <canvas id="costBreakdownChart"></canvas>
-                        </div>
-                    </div>
-
-                    <div class="card boq-card">
-                        <div class="card-header">
-                            <h2><i class="fas fa-list-ol"></i> Bill of Quantities (BOQ)</h2>
-                        </div>
-                        <div class="table-responsive">
-                            <table class="data-table">
-                                <thead>
-                                    <tr>
-                                        <th>Item</th>
-                                        <th>Description</th>
-                                        <th>Qty</th>
-                                        <th>Unit</th>
-                                        <th class="text-right">Unit Price</th>
-                                        <th class="text-right">Total Cost</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="boqBody">
-                                    </tbody>
-                                <tfoot id="boqFooter">
-                                    </tfoot>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="disclaimer-box">
-                    <div class="disclaimer-header">
-                        <i class="fas fa-exclamation-triangle"></i>
-                        <h3>Important NFPA 2001 Disclaimer</h3>
-                    </div>
-                    <div class="disclaimer-body">
-                        <p>This calculation provides <strong>budgetary estimates only</strong>. Final system design must:</p>
-                        <ul>
-                            <li>Be performed by a qualified fire protection engineer</li>
-                            <li>Comply with all applicable NFPA 2001 standards and local regulations</li>
-                            <li>Include site-specific factors not considered in this calculator</li>
-                            <li>Account for actual room leakage rates and ventilation</li>
-                            <li>Include proper hazard analysis and risk assessment</li>
-                        </ul>
-                        <p class="disclaimer-note">
-                            <i class="fas fa-info-circle"></i>
-                            Always consult with certified professionals before implementing any fire suppression system.
-                        </p>
-                    </div>
-                </div>
-            </section>
         </div>
     </main>
 
@@ -177,7 +143,7 @@
                 <div class="footer-section footer-logo">
                     <i class="fas fa-fire-extinguisher"></i>
                     <h4>FM-200 Calculator</h4>
-                    <p>Budgetary Tool v2.0.2</p>
+                    <p>Budgetary Tool v2.1</p>
                 </div>
                 
                 <div class="footer-section">
@@ -192,41 +158,26 @@
                 <div class="footer-section">
                     <h4>Resources</h4>
                     <ul>
-                        <li><a href="https://www.nfpa.org/codes-and-standards/all-codes-and-standards/list-of-codes-and-standards/detail?codeid=2001" target="_blank"><i class="fas fa-book"></i> NFPA 2001 Standard</a></li>
-                        <li><a href="https://firesafetytools.com/oem-suppliers" target="_blank"><i class="fas fa-external-link-alt"></i> OEM Suppliers</a></li>
-                        <li><a href="#" id="printGuide"><i class="fas fa-print"></i> Print Guide</a></li>
-                        <li><a href="#" id="exportData"><i class="fas fa-download"></i> Export Data</a></li>
+                        <li><a href="https://www.nfpa.org/2001" target="_blank"><i class="fas fa-book"></i> NFPA 2001</a></li>
+                        <li><a href="https://www.kiddefenwal.com" target="_blank"><i class="fas fa-external-link-alt"></i> OEM Suppliers</a></li>
                     </ul>
                 </div>
                 
                 <div class="footer-section">
-                    <h4>Contact</h4>
-                    <p><i class="fas fa-envelope"></i> support@firesafetytools.com</p>
-                    <div id="google_translate_element"></div>
+                    <h4>Disclaimer</h4>
+                    <p class="footer-note">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        For budgetary estimation only. Final design requires qualified engineers.
+                    </p>
                 </div>
             </div>
             
             <div class="footer-bottom">
-                <p>&copy; 2024 Fire Safety Tools. All rights reserved. | <a href="#">Privacy Policy</a> | <a href="#">Terms of Service</a></p>
-                <p class="footer-note">
-                    <i class="fas fa-exclamation-triangle"></i>
-                    This tool provides budgetary estimates only. Final design must be performed by qualified engineers.
-                </p>
+                <p>&copy; 2024 Fire Safety Tools. | <a href="#" onclick="return false">Privacy</a> | <a href="#" onclick="return false">Terms</a></p>
             </div>
         </div>
     </footer>
 
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="script.js"></script>
-    <script>
-        // Add floor area display if needed
-        document.addEventListener('DOMContentLoaded', function() {
-            const floorAreaElem = document.getElementById('floorArea');
-            if (floorAreaElem && window.calculator && window.calculator.currentData) {
-                const floorArea = window.calculator.currentData.calculationResults.floorArea;
-                floorAreaElem.textContent = `${floorArea} m²`;
-            }
-        });
-    </script>
 </body>
 </html>
