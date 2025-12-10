@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generate Quotation | FM-200 Calculator</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- PDF Generation Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://unpkg.com/jspdf@latest/dist/jspdf.umd.min.js"></script>
+</head>
+<body>
+    <div id="appNotification" class="notification"></div>
+
+    <header class="main-header">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <i class="fas fa-fire-extinguisher"></i>
+                    <h1>FM-200 Calculator</h1>
+                </div>
+                <nav class="main-nav">
+                    <a href="index.html"><i class="fas fa-calculator"></i> Calculator</a>
+                    <a href="results.html"><i class="fas fa-chart-bar"></i> Results</a>
+                    <a href="quotation.html" class="active"><i class="fas fa-file-invoice-dollar"></i> Quotation</a>
+                    <button id="themeToggle" class="btn-icon"><i class="fas fa-moon"></i></button>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <main class="main-content">
+        <div class="container">
+            <div class="page-header">
+                <h1>Generate Quotation</h1>
+                <div>
+                    <button id="generatePDF" class="btn-primary"><i class="fas fa-file-pdf"></i> Export PDF</button>
+                    <button id="generateExcel" class="btn-secondary"><i class="fas fa-file-excel"></i> Export Excel</button>
+                </div>
+            </div>
+
+            <section id="quotationBody">
+                <div class="quotation-header">
+                    <h1>FM-200 TOTAL FLOODING SYSTEM QUOTATION</h1>
+                    <p>Professional Fire Suppression Solution</p>
+                </div>
+
+                <form id="quotationForm" class="card">
+                    <div class="card-header">
+                        <h2><i class="fas fa-user-edit"></i> Quotation Details</h2>
+                    </div>
+                    
+                    <div class="quotation-details">
+                        <div class="detail-section">
+                            <h3>Sender Information</h3>
+                            <div class="quote-info">
+                                <p><span class="quote-label">Name:</span> <input type="text" id="senderName" placeholder="Your Company Name" style="width: 70%;"></p>
+                                <p><span class="quote-label">Email:</span> <input type="email" id="senderEmail" placeholder="contact@company.com" style="width: 70%;"></p>
+                            </div>
+                        </div>
+                        
+                        <div class="detail-section">
+                            <h3>Client Information</h3>
+                            <div class="quote-info">
+                                <p><span class="quote-label">Client Name:</span> <input type="text" id="clientName" placeholder="Client Company Name" style="width: 70%;"></p>
+                                <p><span class="quote-label">Project:</span> <span id="quoteProjectName">FM-200 Project</span></p>
+                                <p><span class="quote-label">Location:</span> <span id="quoteClientLocation">Dubai, UAE</span></p>
+                            </div>
+                        </div>
+                        
+                        <div class="detail-section">
+                            <h3>Quotation Details</h3>
+                            <div class="quote-info">
+                                <p><span class="quote-label">Ref No:</span> <input type="text" id="quotationRef" value="QUOT-FM200-001" style="width: 60%;"></p>
+                                <p><span class="quote-label">Date:</span> <input type="date" id="quotationDate" style="width: 60%;"></p>
+                                <p><span class="quote-label">Valid Until:</span> <input type="date" id="validUntil" style="width: 60%;"></p>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+
+                <div class="card quotation-table-section">
+                    <div class="card-header">
+                        <h2><i class="fas fa-list-alt"></i> Bill of Quantities</h2>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Item</th>
+                                    <th>Description</th>
+                                    <th>Qty</th>
+                                    <th>Unit</th>
+                                    <th class="text-right">Unit Price</th>
+                                    <th class="text-right">Total Cost</th>
+                                </tr>
+                            </thead>
+                            <tbody id="quotationTableBody">
+                                <!-- Filled by JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div class="total-summary">
+                        <h3>Grand Total</h3>
+                        <span class="total-value" id="quotationGrandTotal">$0.00</span>
+                    </div>
+                </div>
+
+                <div class="disclaimer-box">
+                    <div class="disclaimer-header">
+                        <i class="fas fa-file-contract"></i>
+                        <h3>Terms & Conditions</h3>
+                    </div>
+                    <div class="disclaimer-body">
+                        <ul>
+                            <li>Prices are for budgetary estimation only and subject to change</li>
+                            <li>Final design must be performed by qualified fire protection engineers</li>
+                            <li>System must comply with NFPA 2001 and local regulations</li>
+                            <li>Installation requires certified technicians</li>
+                            <li>Warranty as per OEM specifications</li>
+                            <li>This quotation is valid for 30 days from the date issued</li>
+                        </ul>
+                        <p class="disclaimer-note">
+                            <i class="fas fa-handshake"></i>
+                            For acceptance, please sign and return a copy of this quotation.
+                        </p>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <footer class="main-footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section footer-logo">
+                    <i class="fas fa-fire-extinguisher"></i>
+                    <h4>FM-200 Calculator</h4>
+                    <p>Budgetary Tool v2.0.2</p>
+                </div>
+                
+                <div class="footer-section">
+                    <h4>Quick Links</h4>
+                    <ul>
+                        <li><a href="index.html"><i class="fas fa-calculator"></i> Calculator</a></li>
+                        <li><a href="results.html"><i class="fas fa-chart-bar"></i> Results</a></li>
+                        <li><a href="quotation.html"><i class="fas fa-file-invoice-dollar"></i> Quotation</a></li>
+                    </ul>
+                </div>
+                
+                <div class="footer-section">
+                    <h4>Resources</h4>
+                    <ul>
+                        <li><a href="https://www.nfpa.org/codes-and-standards/all-codes-and-standards/list-of-codes-and-standards/detail?codeid=2001" target="_blank"><i class="fas fa-book"></i> NFPA 2001 Standard</a></li>
+                        <li><a href="https://firesafetytools.com/oem-suppliers" target="_blank"><i class="fas fa-external-link-alt"></i> OEM Suppliers</a></li>
+                        <li><a href="#" id="printGuide"><i class="fas fa-print"></i> Print Guide</a></li>
+                        <li><a href="#" id="exportData"><i class="fas fa-download"></i> Export Data</a></li>
+                    </ul>
+                </div>
+                
+                <div class="footer-section">
+                    <h4>Contact</h4>
+                    <p><i class="fas fa-envelope"></i> support@firesafetytools.com</p>
+                    <p><i class="fas fa-phone"></i> +1 (555) 123-4567</p>
+                </div>
+            </div>
+            
+            <div class="footer-bottom">
+                <p>&copy; 2024 Fire Safety Tools. All rights reserved. | <a href="#">Privacy Policy</a> | <a href="#">Terms of Service</a></p>
+                <p class="footer-note">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    This tool provides budgetary estimates only. Final design must be performed by qualified engineers.
+                </p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>

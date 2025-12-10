@@ -1,0 +1,51 @@
+{
+  "exchangeRates": {
+    "USD": 1,
+    "EUR": 0.92,
+    "INR": 83.5,
+    "AED": 3.67
+  },
+  "costMultipliers": {
+    "agentCostPerKg": 48.5,
+    "cylinderCost": 1250,
+    "nozzleCost": 175,
+    "pipingCostPerMeter": 45,
+    "detectionSystem": 1800,
+    "actuationDevice": 450,
+    "controlPanel": 2200,
+    "warningSigns": 85,
+    "installationLabor": 3200,
+    "documentation": 450,
+    "installationFactor": 1.28,
+    "engineeringFactor": 1.15
+  },
+  "technicalSpecs": {
+    "cylinderSizes": [
+      { "weight": 54.4, "name": "120lb Standard" },
+      { "weight": 27.2, "name": "60lb Compact" },
+      { "weight": 108.8, "name": "240lb Large" }
+    ],
+    "nozzleTypes": [
+      { "type": "Standard", "coverage": 50 },
+      { "type": "High-Flow", "coverage": 75 },
+      { "type": "Low-Pressure", "coverage": 35 }
+    ],
+    "safetyFactors": {
+      "altitude": 1.1,
+      "highTemp": 1.05,
+      "criticalArea": 1.2
+    },
+    "nfpaRequirements": {
+        "minConcentration": 7.0,
+        "minAgentMargin": 0.07
+    }
+  },
+  "oemSuppliers": [
+    { "name": "Kidde-Fenwal", "website": "https://www.kiddefenwal.com" },
+    { "name": "Fike", "website": "https://www.fike.com" },
+    { "name": "Ansul (Tyco)", "website": "https://www.ansul.com" },
+    { "name": "Rotarex", "website": "https://www.rotarex.com" },
+    { "name": "3M", "website": "https://www.3m.com" },
+    { "name": "Chemours", "website": "https://www.chemours.com" }
+  ]
+}

@@ -1,0 +1,81 @@
+/* ... existing styles ... */
+
+/* Tooltip Styles */
+.tooltip {
+    position: absolute;
+    background: var(--primary-color);
+    color: white;
+    padding: 0.5rem 0.75rem;
+    border-radius: 4px;
+    font-size: 0.875rem;
+    z-index: 10000;
+    max-width: 300px;
+    box-shadow: var(--box-shadow);
+    pointer-events: none;
+}
+
+.tooltip:after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    margin-left: -5px;
+    border-width: 5px;
+    border-style: solid;
+    border-color: var(--primary-color) transparent transparent transparent;
+}
+
+/* Print-specific styles */
+@media print {
+    .tooltip {
+        display: none !important;
+    }
+    
+    .btn, .btn-icon, .page-header > div:last-child {
+        display: none !important;
+    }
+    
+    .main-header, .main-footer {
+        display: none !important;
+    }
+    
+    .quotation-header h1 {
+        font-size: 24px !important;
+        color: #000 !important;
+    }
+    
+    .disclaimer-box {
+        border: 1px solid #000 !important;
+        background: #fff !important;
+    }
+    
+    .total-summary {
+        border: 2px solid #000 !important;
+        background: #f0f0f0 !important;
+    }
+}
+
+/* Enhanced responsive design */
+@media (max-width: 768px) {
+    .metrics-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+    }
+    
+    .specs-grid {
+        grid-template-columns: 1fr !important;
+    }
+    
+    .quotation-details {
+        grid-template-columns: 1fr !important;
+    }
+    
+    .table-responsive {
+        overflow-x: auto;
+        font-size: 0.9rem;
+    }
+    
+    .data-table th, .data-table td {
+        padding: 0.5rem !important;
+        font-size: 0.9rem;
+    }
+}
