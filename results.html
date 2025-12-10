@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FM-200 Calculation Results | Fire Safety Tools</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div id="appNotification" class="notification"></div>
+
+    <header class="main-header">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <i class="fas fa-fire-extinguisher"></i>
+                    <h1>FM-200 Calculator</h1>
+                </div>
+                <nav class="main-nav">
+                    <a href="index.html"><i class="fas fa-calculator"></i> Calculator</a>
+                    <a href="results.html" class="active"><i class="fas fa-chart-bar"></i> Results</a>
+                    <a href="quotation.html"><i class="fas fa-file-invoice-dollar"></i> Quotation</a>
+                    <button id="themeToggle" class="btn-icon"><i class="fas fa-moon"></i></button>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <main class="main-content">
+        <div class="container">
+            <div class="page-header">
+                <h1>Calculation Results for <span id="displayProjectName">FM-200 Project</span></h1>
+                <div>
+                    <button id="printResults" class="btn-secondary"><i class="fas fa-print"></i> Print</button>
+                    <a href="quotation.html" class="btn-primary"><i class="fas fa-file-invoice-dollar"></i> Generate Quotation</a>
+                </div>
+            </div>
+            
+            <section id="calculationResults">
+                <p class="project-meta">Location: <span id="displayLocation">Loading...</span> | <span id="calculationTimestamp">Calculated just now</span></p>
+
+                <div class="card metrics-card">
+                    <div class="card-header">
+                        <h2><i class="fas fa-balance-scale"></i> Key System Requirements</h2>
+                    </div>
+                    <div class="specs-grid metrics-grid">
+                        <div class="metric-box">
+                            <span class="metric-label">Agent Required</span>
+                            <span class="metric-value" id="agentQuantity">0 kg</span>
+                        </div>
+                        <div class="metric-box">
+                            <span class="metric-label">Cylinders (Min.)</span>
+                            <span class="metric-value" id="cylinderCount">0 pcs</span>
+                        </div>
+                        <div class="metric-box">
+                            <span class="metric-label">Cylinder Size</span>
+                            <span class="metric-value" id="cylinderSizeDisplay">0 kg</span>
+                        </div>
+                        <div class="metric-box">
+                            <span class="metric-label">Discharge Nozzles</span>
+                            <span class="metric-value" id="nozzleCount">0 pcs</span>
+                        </div>
+                        <div class="metric-box">
+                            <span class="metric-label">Estimated Pipe Length</span>
+                            <span class="metric-value" id="pipingLength">0 m</span>
+                        </div>
+                        <div class="metric-box">
+                            <span class="metric-label">Floor Area</span>
+                            <span class="metric-value" id="floorArea">0 m²</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="results-grid">
+                    <div class="card chart-card">
+                        <div class="card-header">
+                            <h2><i class="fas fa-chart-pie"></i> Cost Breakdown</h2>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="costBreakdownChart"></canvas>
+                            <div class="chart-note" id="chartNote">
+                                Chart will display after calculation
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card boq-card">
+                        <div class="card-header">
+                            <h2><i class="fas fa-list-ol"></i> Bill of Quantities (BOQ)</h2>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Item</th>
+                                        <th>Description</th>
+                                        <th>Qty</th>
+                                        <th>Unit</th>
+                                        <th class="text-right">Unit Price</th>
+                                        <th class="text-right">Total Cost</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="boqBody">
+                                    <tr id="boqEmpty">
+                                        <td colspan="6" class="text-center">No calculation data available. Please use the calculator first.</td>
+                                    </tr>
+                                </tbody>
+                                <tfoot id="boqFooter"></tfoot>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="action-buttons">
+                    <a href="index.html" class="btn-outline"><i class="fas fa-redo"></i> New Calculation</a>
+                    <button id="exportData" class="btn-secondary"><i class="fas fa-download"></i> Export Data</button>
+                </div>
+                
+                <div class="disclaimer-box">
+                    <div class="disclaimer-header">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <h3>Important NFPA 2001 Disclaimer</h3>
+                    </div>
+                    <div class="disclaimer-body">
+                        <p>This calculation provides <strong>budgetary estimates only</strong>. Final system design must:</p>
+                        <ul>
+                            <li>Be performed by a qualified fire protection engineer</li>
+                            <li>Comply with all applicable NFPA 2001 standards and local regulations</li>
+                            <li>Include site-specific factors not considered in this calculator</li>
+                            <li>Account for actual room leakage rates and ventilation</li>
+                        </ul>
+                        <p class="disclaimer-note">
+                            <i class="fas fa-info-circle"></i>
+                            Always consult with certified professionals before implementation.
+                        </p>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <footer class="main-footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section footer-logo">
+                    <i class="fas fa-fire-extinguisher"></i>
+                    <h4>FM-200 Calculator</h4>
+                    <p>Budgetary Tool v2.1</p>
+                </div>
+                
+                <div class="footer-section">
+                    <h4>Quick Links</h4>
+                    <ul>
+                        <li><a href="index.html"><i class="fas fa-calculator"></i> Calculator</a></li>
+                        <li><a href="results.html"><i class="fas fa-chart-bar"></i> Results</a></li>
+                        <li><a href="quotation.html"><i class="fas fa-file-invoice-dollar"></i> Quotation</a></li>
+                    </ul>
+                </div>
+                
+                <div class="footer-section">
+                    <h4>Resources</h4>
+                    <ul>
+                        <li><a href="https://www.nfpa.org/2001" target="_blank"><i class="fas fa-book"></i> NFPA 2001</a></li>
+                        <li><a href="https://www.kiddefenwal.com" target="_blank"><i class="fas fa-external-link-alt"></i> OEM Suppliers</a></li>
+                    </ul>
+                </div>
+                
+                <div class="footer-section">
+                    <h4>Disclaimer</h4>
+                    <p class="footer-note">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        For budgetary estimation only. Final design requires qualified engineers.
+                    </p>
+                </div>
+            </div>
+            
+            <div class="footer-bottom">
+                <p>&copy; 2024 Fire Safety Tools. | <a href="#" onclick="return false">Privacy</a> | <a href="#" onclick="return false">Terms</a></p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
