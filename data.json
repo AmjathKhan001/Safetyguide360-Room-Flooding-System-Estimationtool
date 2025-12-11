@@ -1,23 +1,34 @@
 {
   "exchangeRates": {
-    "USD": 1.0,
+    "USD": 1.00,
     "EUR": 0.92,
-    "INR": 83.5,
-    "AED": 3.67
+    "INR": 83.50,
+    "AED": 3.67,
+    "GBP": 0.79,
+    "CAD": 1.36,
+    "AUD": 1.52
   },
   "costMultipliers": {
-    "agentCostPerKg": 48.5,
-    "cylinderCost": 1250,
-    "nozzleCost": 175,
-    "pipingCostPerMeter": 45,
-    "detectionSystem": 1800,
-    "actuationDevice": 450,
-    "controlPanel": 2200,
-    "warningSigns": 85,
-    "installationLabor": 3200,
-    "documentation": 450,
+    "agentCostPerKg": 48.50,
+    "cylinderCost": 1250.00,
+    "nozzleCost": 175.00,
+    "pipingCostPerMeter": 45.00,
+    "fittingsCost": 320.00,
+    "valveAssembly": 450.00,
+    "mountingHardware": 85.00,
+    "detectionPanel": 2200.00,
+    "smokeDetector": 95.00,
+    "heatDetector": 85.00,
+    "manualCallPoint": 65.00,
+    "hooterStrobe": 75.00,
+    "warningSigns": 45.00,
+    "installationLaborPerHour": 85.00,
+    "engineeringDesign": 2500.00,
+    "commissioningTesting": 1800.00,
+    "documentation": 450.00,
     "installationFactor": 1.28,
-    "engineeringFactor": 1.15
+    "engineeringFactor": 1.15,
+    "contingencyFactor": 1.10
   },
   "technicalSpecs": {
     "cylinderSizes": [
@@ -32,20 +43,7 @@
     ],
     "safetyFactors": {
       "altitude": 1.1,
-      "highTemp": 1.05,
-      "criticalArea": 1.2
-    },
-    "nfpaRequirements": {
-      "minConcentration": 7.0,
-      "minAgentMargin": 0.07
+      "highTemp": 1.05
     }
-  },
-  "oemSuppliers": [
-    { "name": "Kidde-Fenwal", "website": "https://www.kiddefenwal.com" },
-    { "name": "Fike", "website": "https://www.fike.com" },
-    { "name": "Ansul (Tyco)", "website": "https://www.ansul.com" },
-    { "name": "Rotarex", "website": "https://www.rotarex.com" },
-    { "name": "3M", "website": "https://www.3m.com" },
-    { "name": "Chemours", "website": "https://www.chemours.com" }
-  ]
+  }
 }
