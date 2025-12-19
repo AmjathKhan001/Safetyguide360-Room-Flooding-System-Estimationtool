@@ -909,14 +909,56 @@
     <script src="script.js"></script>
     
     <script>
-        function googleTranslateElementInit() {
-            new google.translate.TranslateElement({
-                pageLanguage: 'en',
-                includedLanguages: 'en,es,fr,de,ar,hi,zh-CN',
-                layout: google.translate.TranslateElement.InlineLayout.SIMPLE,
-                autoDisplay: false
-            }, 'google_translate_element');
+    // Visitor counter - runs on DOMContentLoaded
+    document.addEventListener('DOMContentLoaded', function() {
+        updateVisitorCounter();
+        
+        // Feedback modal functionality
+        const feedbackBtn = document.getElementById('feedbackBtn');
+        const feedbackModal = document.getElementById('feedbackModal');
+        const closeModal = feedbackModal?.querySelector('.close-modal');
+        
+        if (feedbackBtn && feedbackModal) {
+            feedbackBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                feedbackModal.style.display = 'flex';
+            });
+            
+            closeModal.addEventListener('click', function() {
+                feedbackModal.style.display = 'none';
+            });
+            
+            window.addEventListener('click', function(e) {
+                if (e.target === feedbackModal) {
+                    feedbackModal.style.display = 'none';
+                }
+            });
+            
+            const feedbackForm = document.getElementById('feedbackForm');
+            if (feedbackForm) {
+                feedbackForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    
+                    const formData = {
+                        name: document.getElementById('feedbackName').value,
+                        email: document.getElementById('feedbackEmail').value,
+                        message: document.getElementById('feedbackMessage').value,
+                        type: document.getElementById('feedbackType').value,
+                        timestamp: new Date().toISOString(),
+                        page: window.location.href
+                    };
+                    
+                    const feedbacks = JSON.parse(localStorage.getItem('fm200Feedbacks') || '[]');
+                    feedbacks.push(formData);
+                    localStorage.setItem('fm200Feedbacks', JSON.stringify(feedbacks));
+                    
+                    alert('Thank you for your feedback! We will review it soon.');
+                    feedbackForm.reset();
+                    feedbackModal.style.display = 'none';
+                });
+            }
         }
-    </script>
+    });
+</script>
 </body>
 </html>
