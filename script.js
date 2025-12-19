@@ -1,12 +1,12 @@
-// FM-200 Calculator - Complete Version with Print/PDF
-// Version 5.2 - All features included
+// FM-200 Calculator - Fixed Version with Proper Data Passing
+// Version 6.1 - Fixed calculation flow
 
 // ============================================================================
 // CONFIGURATION & CONSTANTS
 // ============================================================================
 
 const APP_CONFIG = {
-    version: '5.2',
+    version: '6.1',
     appName: 'FM-200 Calculator',
     developer: 'Fire Safety Tools',
     contactEmail: 'contact@amjathkhan.com',
@@ -26,11 +26,10 @@ const APP_CONFIG = {
         area: 'm²'
     },
     
-    // Storage Keys
+    // Storage Keys - FIXED NAMES
     storageKeys: {
-        BUDGET_DATA: 'fm200_budget_data',
+        CALCULATION_DATA: 'fm200_calculation_data',
         USER_PREFERENCES: 'fm200_user_prefs',
-        QUOTATION_DATA: 'fm200_quotation_data',
         VISITOR_COUNT: 'fm200_visitor_count'
     }
 };
@@ -127,8 +126,7 @@ class FM200Calculator {
         }
         return {
             theme: 'light',
-            expertMode: false,
-            lastCurrency: 'INR'
+            expertMode: false
         };
     }
 
@@ -356,9 +354,13 @@ class FM200Calculator {
             
             const calculationResults = this.performNFPA2001Calculation(formData);
             
+            // Calculate costs
+            const costResults = this.calculateSystemCosts(calculationResults);
+            
             const completeData = {
                 formData: formData,
                 calculationResults: calculationResults,
+                costResults: costResults,
                 metadata: {
                     timestamp: new Date().toISOString(),
                     projectId: this.generateProjectId(),
@@ -366,10 +368,13 @@ class FM200Calculator {
                 }
             };
 
-            sessionStorage.setItem(APP_CONFIG.storageKeys.BUDGET_DATA, JSON.stringify(completeData));
-
+            // Save to sessionStorage AND localStorage for reliability
+            sessionStorage.setItem(APP_CONFIG.storageKeys.CALCULATION_DATA, JSON.stringify(completeData));
+            localStorage.setItem('fm200_last_calculation', JSON.stringify(completeData));
+            
             this.showNotification('Calculation successful! Redirecting to results...', 'success');
             
+            // Redirect to results page
             setTimeout(() => {
                 window.location.href = 'results.html';
             }, 1500);
@@ -436,62 +441,6 @@ class FM200Calculator {
             calculationMethod: 'NFPA 2001 Standard Formula',
             units: APP_CONFIG.units
         };
-    }
-
-    // ============================================================================
-    // RESULTS PAGE
-    // ============================================================================
-
-    initResultsPage() {
-        console.log('Initializing Results Page');
-        
-        this.loadCalculationData();
-        this.renderResultsPage();
-        this.initResultsEventListeners();
-
-        console.log('Results Page Initialized');
-    }
-
-    loadCalculationData() {
-        try {
-            const dataJson = sessionStorage.getItem(APP_CONFIG.storageKeys.BUDGET_DATA);
-            if (dataJson) {
-                this.currentData = JSON.parse(dataJson);
-                console.log('Calculation data loaded');
-                
-                // Calculate costs
-                const costResults = this.calculateSystemCosts(this.currentData.calculationResults);
-                this.currentData.costResults = costResults;
-                
-                // Update BOQ table
-                setTimeout(() => this.renderBOQTable(), 100);
-            } else {
-                this.showNotification('No previous calculation found. Please use the calculator page first.', 'warning');
-                setTimeout(() => {
-                    window.location.href = 'index.html';
-                }, 3000);
-            }
-        } catch (e) {
-            console.error('Error loading calculation data:', e);
-            this.showNotification('Error loading calculation data. Please recalculate.', 'error');
-        }
-    }
-
-    renderResultsPage() {
-        if (!this.currentData) return;
-
-        const { formData, calculationResults } = this.currentData;
-        
-        this.setElementText('displayProjectName', formData.projectName);
-        this.setElementText('agentMassResult', `${calculationResults.agentWeight} kg`);
-        this.setElementText('cylinderCountResult', `${calculationResults.cylinderCount} x ${calculationResults.cylinderSize} kg cylinders`);
-        this.setElementText('roomVolumeResult', `${calculationResults.netVolume} m³`);
-        this.setElementText('designTempResult', `${calculationResults.designTemperature} °C`);
-        this.setElementText('altitudeResult', `${calculationResults.altitude} m`);
-        this.setElementText('concentrationResult', `${calculationResults.concentration}%`);
-        this.setElementText('specificVolumeResult', `${calculationResults.specificVaporVolume} m³/kg`);
-        this.setElementText('nozzleCoverageResult', `${calculationResults.floorArea} m²`);
-        this.setElementText('nozzleCountResult', calculationResults.nozzleCount);
     }
 
     calculateSystemCosts(calculationResults) {
@@ -565,6 +514,247 @@ class FM200Calculator {
         };
     }
 
+    // ============================================================================
+    // RESULTS PAGE METHODS
+    // ============================================================================
+
+    initResultsPage() {
+        console.log('Initializing Results Page');
+        
+        this.loadCalculationData();
+        this.initResultsEventListeners();
+
+        console.log('Results Page Initialized');
+    }
+
+    loadCalculationData() {
+        try {
+            // Try multiple storage locations for reliability
+            let dataJson = sessionStorage.getItem(APP_CONFIG.storageKeys.CALCULATION_DATA) ||
+                          localStorage.getItem('fm200_last_calculation');
+            
+            if (dataJson) {
+                this.currentData = JSON.parse(dataJson);
+                console.log('Calculation data loaded:', this.currentData);
+                
+                // Render the results
+                this.renderResultsPage();
+            } else {
+                this.showNotification('No calculation data found. Please use the calculator first.', 'warning');
+                // Show helpful message on page
+                this.showNoDataMessage();
+            }
+        } catch (e) {
+            console.error('Error loading calculation data:', e);
+            this.showNotification('Error loading calculation data. Please recalculate.', 'error');
+            this.showNoDataMessage();
+        }
+    }
+
+    showNoDataMessage() {
+        const boqBody = document.querySelector('#boqTable tbody');
+        if (boqBody) {
+            boqBody.innerHTML = `
+                <tr>
+                    <td colspan="4" style="text-align: center; padding: 40px;">
+                        <i class="fas fa-calculator fa-3x" style="color: var(--primary); margin-bottom: 20px;"></i>
+                        <h4 style="color: var(--primary); margin-bottom: 10px;">No Calculation Data Found</h4>
+                        <p style="color: var(--gray); margin-bottom: 20px;">Please use the calculator to generate results first.</p>
+                        <a href="index.html" class="btn btn-primary" style="text-decoration: none; display: inline-block;">
+                            <i class="fas fa-calculator"></i> Go to Calculator
+                        </a>
+                    </td>
+                </tr>
+            `;
+        }
+    }
+
+    renderResultsPage() {
+        if (!this.currentData) return;
+
+        const { formData, calculationResults, costResults } = this.currentData;
+        
+        // Update summary information
+        this.setElementText('displayProjectName', formData.projectName);
+        this.setElementText('agentMassResult', `${calculationResults.agentWeight} kg`);
+        this.setElementText('cylinderCountResult', `${calculationResults.cylinderCount} x ${calculationResults.cylinderSize} kg cylinders`);
+        this.setElementText('roomVolumeResult', `${calculationResults.netVolume} m³`);
+        this.setElementText('designTempResult', `${calculationResults.designTemperature} °C`);
+        this.setElementText('altitudeResult', `${calculationResults.altitude} m`);
+        this.setElementText('concentrationResult', `${calculationResults.concentration}%`);
+        this.setElementText('specificVolumeResult', `${calculationResults.specificVaporVolume} m³/kg`);
+        this.setElementText('nozzleCoverageResult', `${calculationResults.floorArea} m²`);
+        this.setElementText('nozzleCountResult', calculationResults.nozzleCount);
+        this.setElementText('pipingLengthResult', `${calculationResults.pipingLength} m`);
+        
+        // Generate BOQ table
+        this.renderBOQTable();
+        
+        // Generate cylinder visualization
+        this.generateCylinderVisual();
+    }
+
+    renderBOQTable() {
+        if (!this.currentData) return;
+        
+        const { calculationResults, costResults } = this.currentData;
+        const boqBody = document.querySelector('#boqTable tbody');
+        
+        if (!boqBody) return;
+        
+        // Clear existing content
+        boqBody.innerHTML = '';
+        
+        // Add BOQ items
+        const items = [
+            { 
+                description: 'FM-200 Clean Agent', 
+                quantity: calculationResults.agentWeight, 
+                unit: 'kg', 
+                unitPrice: 4000,
+                total: calculationResults.agentWeight * 4000 
+            },
+            { 
+                description: 'Storage Cylinders (54.4 kg)', 
+                quantity: calculationResults.cylinderCount, 
+                unit: 'nos', 
+                unitPrice: 90000,
+                total: calculationResults.cylinderCount * 90000 
+            },
+            { 
+                description: 'Valve Assemblies', 
+                quantity: calculationResults.cylinderCount, 
+                unit: 'nos', 
+                unitPrice: 25000,
+                total: calculationResults.cylinderCount * 25000 
+            },
+            { 
+                description: 'Nozzles (Standard Coverage)', 
+                quantity: calculationResults.nozzleCount, 
+                unit: 'nos', 
+                unitPrice: 8000,
+                total: calculationResults.nozzleCount * 8000 
+            },
+            { 
+                description: 'Piping System (Sch 40)', 
+                quantity: calculationResults.pipingLength, 
+                unit: 'm', 
+                unitPrice: 1200,
+                total: calculationResults.pipingLength * 1200 
+            }
+        ];
+        
+        let subtotal = 0;
+        
+        items.forEach(item => {
+            subtotal += item.total;
+            
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${item.description}</td>
+                <td>${item.quantity} ${item.unit}</td>
+                <td>${this.formatCurrency(item.unitPrice)}</td>
+                <td>${this.formatCurrency(item.total)}</td>
+            `;
+            boqBody.appendChild(row);
+        });
+        
+        // Add additional items
+        const additionalItems = [
+            { description: 'Fittings & Accessories', quantity: 1, unit: 'lot', unitPrice: 15000, total: 15000 },
+            { description: 'Detection & Control Panel', quantity: 1, unit: 'nos', unitPrice: 120000, total: 120000 },
+            { description: 'Smoke Detectors', quantity: Math.max(2, Math.ceil(calculationResults.floorArea / 100)), unit: 'nos', unitPrice: 4500, total: Math.max(2, Math.ceil(calculationResults.floorArea / 100)) * 4500 },
+            { description: 'Heat Detectors', quantity: 2, unit: 'nos', unitPrice: 3800, total: 7600 },
+            { description: 'Manual Call Points', quantity: 2, unit: 'nos', unitPrice: 2500, total: 5000 }
+        ];
+        
+        additionalItems.forEach(item => {
+            subtotal += item.total;
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${item.description}</td>
+                <td>${item.quantity} ${item.unit}</td>
+                <td>${this.formatCurrency(item.unitPrice)}</td>
+                <td>${this.formatCurrency(item.total)}</td>
+            `;
+            boqBody.appendChild(row);
+        });
+        
+        // Calculate additional costs
+        const installationCost = subtotal * 0.28; // 28% installation
+        const engineeringCost = subtotal * 0.15; // 15% engineering
+        const taxContingency = subtotal * 0.18; // 18% tax & contingency
+        const grandTotal = subtotal + installationCost + engineeringCost + taxContingency;
+        
+        // Update cost display
+        this.setElementText('subtotalCost', this.formatCurrency(subtotal));
+        this.setElementText('installationCost', this.formatCurrency(installationCost));
+        this.setElementText('engineeringCost', this.formatCurrency(engineeringCost));
+        this.setElementText('taxContingencyCost', this.formatCurrency(taxContingency));
+        this.setElementText('grandTotalCost', this.formatCurrency(grandTotal));
+        
+        // Update cost breakdown
+        this.setElementText('agentCostBreakdown', this.formatCurrency(calculationResults.agentWeight * 4000));
+        this.setElementText('cylinderCostBreakdown', this.formatCurrency(calculationResults.cylinderCount * 115000));
+        this.setElementText('detectionCostBreakdown', this.formatCurrency(120000 + (Math.max(2, Math.ceil(calculationResults.floorArea / 100)) * 4500) + 7600 + 5000));
+        this.setElementText('pipingCostBreakdown', this.formatCurrency((calculationResults.nozzleCount * 8000) + (calculationResults.pipingLength * 1200) + 15000));
+    }
+
+    generateCylinderVisual() {
+        if (!this.currentData) return;
+        
+        const container = document.getElementById('cylinderVisualContainer');
+        if (!container) return;
+        
+        const { calculationResults } = this.currentData;
+        
+        container.innerHTML = '';
+        
+        // Create cylinder cards
+        const cylinderTypes = [
+            {
+                label: 'Total Cylinders',
+                value: calculationResults.cylinderCount,
+                subtitle: '54.4 kg cylinders',
+                color: 'var(--primary)'
+            },
+            {
+                label: 'Agent Weight',
+                value: `${calculationResults.agentWeight.toFixed(0)} kg`,
+                subtitle: 'FM-200 Clean Agent',
+                color: 'var(--secondary)'
+            },
+            {
+                label: 'System Coverage',
+                value: `${calculationResults.netVolume.toFixed(0)} m³`,
+                subtitle: 'Protected Volume',
+                color: 'var(--tertiary)'
+            },
+            {
+                label: 'Nozzles Required',
+                value: calculationResults.nozzleCount,
+                subtitle: 'For uniform distribution',
+                color: 'var(--warning)'
+            }
+        ];
+        
+        cylinderTypes.forEach(type => {
+            const card = document.createElement('div');
+            card.className = 'cylinder-card';
+            card.style.borderTopColor = type.color;
+            
+            card.innerHTML = `
+                <div class="cylinder-content">
+                    <div class="cylinder-label">${type.label}</div>
+                    <div class="cylinder-value">${type.value}</div>
+                    <div class="cylinder-subtitle">${type.subtitle}</div>
+                </div>
+            `;
+            
+            container.appendChild(card);
+        });
+    }
+
     initResultsEventListeners() {
         // Print/PDF Button
         const printBtn = document.getElementById('printResults');
@@ -574,484 +764,228 @@ class FM200Calculator {
             });
         }
 
-        // Export BOQ Button
-        const exportBtn = document.getElementById('exportBOQ');
+        // Export CSV Button
+        const exportBtn = document.getElementById('exportCSV');
         if (exportBtn) {
             exportBtn.addEventListener('click', () => {
                 this.exportBOQToCSV();
             });
         }
-    }
 
-    renderBOQTable() {
-        if (!this.currentData) return;
-        
-        const { costResults, calculationResults } = this.currentData;
-        const currency = 'INR';
-        const boqBody = document.querySelector('#boqTable tbody');
-        
-        if (!boqBody) return;
-        
-        boqBody.innerHTML = '';
-        
-        const boqItems = [
-            { 
-                item: 'FM-200 Agent', 
-                qty: calculationResults.agentWeight, 
-                unit: 'kg', 
-                unitPrice: costResults.agentCost / calculationResults.agentWeight 
-            },
-            { 
-                item: 'Storage Cylinders', 
-                qty: calculationResults.cylinderCount, 
-                unit: 'pcs', 
-                unitPrice: costResults.cylinderCost / calculationResults.cylinderCount 
-            },
-            { 
-                item: 'Valve Assemblies', 
-                qty: calculationResults.cylinderCount, 
-                unit: 'pcs', 
-                unitPrice: costResults.valveCost / calculationResults.cylinderCount 
-            },
-            { 
-                item: 'Mounting Hardware', 
-                qty: calculationResults.cylinderCount, 
-                unit: 'sets', 
-                unitPrice: costResults.mountingCost / calculationResults.cylinderCount 
-            },
-            { 
-                item: 'Nozzles', 
-                qty: calculationResults.nozzleCount, 
-                unit: 'pcs', 
-                unitPrice: costResults.nozzleCost / calculationResults.nozzleCount 
-            },
-            { 
-                item: 'Piping', 
-                qty: calculationResults.pipingLength, 
-                unit: 'm', 
-                unitPrice: costResults.pipingCost / calculationResults.pipingLength 
-            },
-            { 
-                item: 'Fittings & Accessories', 
-                qty: 1, 
-                unit: 'lot', 
-                unitPrice: costResults.fittingsCost 
-            },
-            { 
-                item: 'Detection Panel', 
-                qty: 1, 
-                unit: 'pcs', 
-                unitPrice: costResults.detectionCost 
-            },
-            { 
-                item: 'Smoke Detectors', 
-                qty: Math.max(2, Math.ceil(calculationResults.floorArea / 100)), 
-                unit: 'pcs', 
-                unitPrice: this.costMultipliers.smokeDetector 
-            },
-            { 
-                item: 'Heat Detectors', 
-                qty: 2, 
-                unit: 'pcs', 
-                unitPrice: this.costMultipliers.heatDetector 
-            }
-        ];
-        
-        let subtotal = 0;
-        
-        boqItems.forEach(item => {
-            const total = item.unitPrice * item.qty;
-            subtotal += total;
-            
-            const row = document.createElement('tr');
-            row.innerHTML = `
-                <td>${item.item}</td>
-                <td>${this.round(item.qty, 2)} ${item.unit}</td>
-                <td>${this.formatCurrency(item.unitPrice, currency)}</td>
-                <td>${this.formatCurrency(total, currency)}</td>
-            `;
-            boqBody.appendChild(row);
-        });
-        
-        // Additional costs
-        const additionalItems = [
-            { item: 'Manual Call Points', cost: costResults.manualCallPoints },
-            { item: 'Hooter Strobes', cost: costResults.hooterStrobes },
-            { item: 'Warning Signs', cost: costResults.warningSigns },
-            { item: 'Installation Labor', cost: costResults.installationLabor },
-            { item: 'Engineering Design', cost: costResults.engineeringDesign },
-            { item: 'Commissioning & Testing', cost: costResults.commissioningTesting },
-            { item: 'Documentation', cost: costResults.documentation }
-        ];
-        
-        additionalItems.forEach(item => {
-            subtotal += item.cost;
-            const row = document.createElement('tr');
-            row.innerHTML = `
-                <td>${item.item}</td>
-                <td>1</td>
-                <td>${this.formatCurrency(item.cost, currency)}</td>
-                <td>${this.formatCurrency(item.cost, currency)}</td>
-            `;
-            boqBody.appendChild(row);
-        });
-        
-        const factorTotal = costResults.installationFactorCost + costResults.engineeringFactorCost + costResults.contingency;
-        const grandTotal = subtotal + factorTotal;
-        
-        // Remove or hide currency selector since we only use INR
-        const currencySelector = document.querySelector('.currency-selector-wrapper');
-        if (currencySelector) {
-            currencySelector.style.display = 'none';
+        // Copy BOQ Button
+        const copyBtn = document.getElementById('copyBOQ');
+        if (copyBtn) {
+            copyBtn.addEventListener('click', () => {
+                this.copyBOQToClipboard();
+            });
         }
-        
-        const exchangeRateDisplay = document.querySelector('.exchange-rate');
-        if (exchangeRateDisplay) {
-            exchangeRateDisplay.innerHTML = '<i class="fas fa-rupee-sign"></i> All prices in Indian Rupees (INR)';
-        }
-        
-        this.setElementText('subtotalCost', this.formatCurrency(subtotal, currency));
-        this.setElementText('factorCost', this.formatCurrency(factorTotal, currency));
-        this.setElementText('grandTotalCost', this.formatCurrency(grandTotal, currency));
-        
-        // Update currency symbols in table headers
-        document.querySelectorAll('.currency-symbol').forEach(el => {
-            el.textContent = 'INR';
-        });
-        
-        const installPercent = (this.costMultipliers.installationFactor - 1) * 100;
-        const engineerPercent = (this.costMultipliers.engineeringFactor - 1) * 100;
-        const contingencyPercent = (this.costMultipliers.contingencyFactor - 1) * 100;
-        
-        this.setElementText('installFactor', `${installPercent.toFixed(0)}%`);
-        this.setElementText('engineerFactor', `${engineerPercent.toFixed(0)}%`);
-        
-        // Update cost note
-        const costNote = document.querySelector('.cost-note');
-        if (costNote) {
-            costNote.innerHTML = `Note: Total cost includes installation factor (${installPercent.toFixed(0)}%), engineering factor (${engineerPercent.toFixed(0)}%), and contingency (${contingencyPercent.toFixed(0)}%). Prices are indicative and subject to change.`;
+
+        // Email BOQ Button
+        const emailBtn = document.getElementById('emailBOQ');
+        if (emailBtn) {
+            emailBtn.addEventListener('click', () => {
+                this.emailBOQ();
+            });
         }
     }
 
     printResultsAsPDF() {
-        try {
-            // Create a printable version
-            const printContent = document.createElement('div');
-            printContent.className = 'print-section';
-            printContent.style.cssText = `
-                padding: 20px;
-                background: white;
-                color: black;
-                font-family: Arial, sans-serif;
-            `;
-            
-            const { formData, calculationResults, costResults } = this.currentData;
-            
-            printContent.innerHTML = `
-                <div style="text-align: center; margin-bottom: 30px; border-bottom: 2px solid #ff4c4c; padding-bottom: 20px;">
-                    <h1 style="color: #ff4c4c; margin: 0;">FM-200 CALCULATION REPORT</h1>
-                    <p style="color: #666; margin: 10px 0 0 0;">Generated on ${new Date().toLocaleDateString()}</p>
-                    <p style="color: #666; margin: 5px 0;">Project: ${formData.projectName}</p>
-                </div>
-                
-                <div style="margin-bottom: 30px;">
-                    <h2 style="color: #0099e5; border-bottom: 1px solid #ddd; padding-bottom: 10px;">Project Information</h2>
-                    <table style="width: 100%; border-collapse: collapse; margin-top: 15px;">
-                        <tr>
-                            <td style="padding: 8px; border: 1px solid #ddd;"><strong>Project Name:</strong></td>
-                            <td style="padding: 8px; border: 1px solid #ddd;">${formData.projectName}</td>
-                        </tr>
-                        <tr>
-                            <td style="padding: 8px; border: 1px solid #ddd;"><strong>Location:</strong></td>
-                            <td style="padding: 8px; border: 1px solid #ddd;">${formData.clientLocation}</td>
-                        </tr>
-                        <tr>
-                            <td style="padding: 8px; border: 1px solid #ddd;"><strong>Generated Date:</strong></td>
-                            <td style="padding: 8px; border: 1px solid #ddd;">${new Date().toLocaleString()}</td>
-                        </tr>
-                    </table>
-                </div>
-                
-                <div style="margin-bottom: 30px;">
-                    <h2 style="color: #0099e5; border-bottom: 1px solid #ddd; padding-bottom: 10px;">Calculation Results</h2>
-                    <table style="width: 100%; border-collapse: collapse; margin-top: 15px;">
-                        <tr>
-                            <td style="padding: 8px; border: 1px solid #ddd;"><strong>Room Volume:</strong></td>
-                            <td style="padding: 8px; border: 1px solid #ddd;">${calculationResults.netVolume} m³</td>
-                        </tr>
-                        <tr>
-                            <td style="padding: 8px; border: 1px solid #ddd;"><strong>FM-200 Agent Required:</strong></td>
-                            <td style="padding: 8px; border: 1px solid #ddd;">${calculationResults.agentWeight} kg</td>
-                        </tr>
-                        <tr>
-                            <td style="padding: 8px; border: 1px solid #ddd;"><strong>Cylinders Required:</strong></td>
-                            <td style="padding: 8px; border: 1px solid #ddd;">${calculationResults.cylinderCount} x ${calculationResults.cylinderSize} kg</td>
-                        </tr>
-                        <tr>
-                            <td style="padding: 8px; border: 1px solid #ddd;"><strong>Nozzles Required:</strong></td>
-                            <td style="padding: 8px; border: 1px solid #ddd;">${calculationResults.nozzleCount} pcs</td>
-                        </tr>
-                        <tr>
-                            <td style="padding: 8px; border: 1px solid #ddd;"><strong>Design Concentration:</strong></td>
-                            <td style="padding: 8px; border: 1px solid #ddd;">${calculationResults.concentration}%</td>
-                        </tr>
-                    </table>
-                </div>
-                
-                <div style="margin-bottom: 30px;">
-                    <h2 style="color: #0099e5; border-bottom: 1px solid #ddd; padding-bottom: 10px;">Cost Estimate (INR)</h2>
-                    <table style="width: 100%; border-collapse: collapse; margin-top: 15px;">
-                        <thead>
-                            <tr style="background: #ff4c4c; color: white;">
-                                <th style="padding: 10px; border: 1px solid #ddd;">Item</th>
-                                <th style="padding: 10px; border: 1px solid #ddd;">Amount (INR)</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td style="padding: 8px; border: 1px solid #ddd;">FM-200 Agent</td>
-                                <td style="padding: 8px; border: 1px solid #ddd;">${this.formatCurrency(costResults.agentCost, 'INR')}</td>
-                            </tr>
-                            <tr>
-                                <td style="padding: 8px; border: 1px solid #ddd;">Cylinders & Accessories</td>
-                                <td style="padding: 8px; border: 1px solid #ddd;">${this.formatCurrency(costResults.cylinderCost + costResults.valveCost + costResults.mountingCost, 'INR')}</td>
-                            </tr>
-                            <tr>
-                                <td style="padding: 8px; border: 1px solid #ddd;">Nozzles & Piping</td>
-                                <td style="padding: 8px; border: 1px solid #ddd;">${this.formatCurrency(costResults.nozzleCost + costResults.pipingCost + costResults.fittingsCost, 'INR')}</td>
-                            </tr>
-                            <tr>
-                                <td style="padding: 8px; border: 1px solid #ddd;">Detection System</td>
-                                <td style="padding: 8px; border: 1px solid #ddd;">${this.formatCurrency(costResults.detectionCost + costResults.smokeDetectors + costResults.heatDetectors, 'INR')}</td>
-                            </tr>
-                            <tr>
-                                <td style="padding: 8px; border: 1px solid #ddd;">Installation & Engineering</td>
-                                <td style="padding: 8px; border: 1px solid #ddd;">${this.formatCurrency(costResults.installationLabor + costResults.engineeringDesign + costResults.commissioningTesting + costResults.documentation, 'INR')}</td>
-                            </tr>
-                            <tr style="background: #f9f9f9;">
-                                <td style="padding: 8px; border: 1px solid #ddd;"><strong>Subtotal</strong></td>
-                                <td style="padding: 8px; border: 1px solid #ddd;"><strong>${this.formatCurrency(costResults.equipmentSubtotal + costResults.laborSubtotal, 'INR')}</strong></td>
-                            </tr>
-                            <tr style="background: #e9f7e9;">
-                                <td style="padding: 8px; border: 1px solid #ddd;"><strong>Additional Factors & Contingency</strong></td>
-                                <td style="padding: 8px; border: 1px solid #ddd;"><strong>${this.formatCurrency(costResults.installationFactorCost + costResults.engineeringFactorCost + costResults.contingency, 'INR')}</strong></td>
-                            </tr>
-                            <tr style="background: #34bf49; color: white;">
-                                <td style="padding: 10px; border: 1px solid #ddd;"><strong>GRAND TOTAL ESTIMATE</strong></td>
-                                <td style="padding: 10px; border: 1px solid #ddd;"><strong>${this.formatCurrency(costResults.totalINR, 'INR')}</strong></td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-                
-                <div style="margin-top: 40px; padding: 20px; border: 1px solid #ff4c4c; border-radius: 5px; background: #fff9f9;">
-                    <h3 style="color: #ff4c4c; margin-top: 0;">Important Notes:</h3>
-                    <ul style="margin: 10px 0; padding-left: 20px;">
-                        <li>This is a preliminary estimate based on the provided room dimensions.</li>
-                        <li>Final design must be verified by a qualified fire protection engineer.</li>
-                        <li>Prices are in Indian Rupees (INR) and include GST where applicable.</li>
-                        <li>Installation timeline: 4-6 weeks from order confirmation.</li>
-                        <li>System warranty: 12 months from commissioning date.</li>
-                    </ul>
-                </div>
-                
-                <div style="margin-top: 40px; text-align: center; color: #666; font-size: 0.9rem; border-top: 1px solid #ddd; padding-top: 20px;">
-                    <p>Generated by FM-200 Calculator v${APP_CONFIG.version}</p>
-                    <p>Contact: ${APP_CONFIG.contactEmail} | Phone: ${APP_CONFIG.contactPhone}</p>
-                    <p>Website: https://fm-200-room-flooding-system-calcula.vercel.app/</p>
-                </div>
-            `;
-            
-            // Open print dialog
-            const printWindow = window.open('', '_blank');
-            printWindow.document.write(`
-                <!DOCTYPE html>
-                <html>
-                <head>
-                    <title>FM-200 Calculation Report - ${formData.projectName}</title>
-                    <style>
-                        body { font-family: Arial, sans-serif; margin: 20px; color: #333; }
-                        @media print {
-                            body { margin: 0; }
-                            .no-print { display: none; }
-                        }
-                        table { width: 100%; border-collapse: collapse; margin: 10px 0; }
-                        th { background: #ff4c4c; color: white; padding: 10px; text-align: left; }
-                        td { padding: 8px; border: 1px solid #ddd; }
-                        .total-row { background: #34bf49; color: white; font-weight: bold; }
-                        .footer { margin-top: 40px; text-align: center; color: #666; font-size: 0.9rem; border-top: 1px solid #ddd; padding-top: 20px; }
-                    </style>
-                </head>
-                <body>
-                    ${printContent.innerHTML}
-                    <div class="footer no-print" style="margin-top: 30px;">
-                        <button onclick="window.print()" style="padding: 10px 20px; background: #ff4c4c; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; margin-right: 10px;">
-                            <i class="fas fa-print"></i> Print Report
-                        </button>
-                        <button onclick="window.close()" style="padding: 10px 20px; background: #666; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 16px;">
-                            Close Window
-                        </button>
-                    </div>
-                </body>
-                </html>
-            `);
-            printWindow.document.close();
-            
-            // Auto-print after a short delay
-            setTimeout(() => {
-                printWindow.print();
-            }, 500);
-            
-        } catch (error) {
-            console.error('Error generating PDF:', error);
-            this.showNotification('Error generating print report. Please try again.', 'error');
-        }
+        window.print();
     }
 
     exportBOQToCSV() {
-        if (!this.currentData) return;
-        
-        const { formData, calculationResults, costResults } = this.currentData;
-        
-        let csvContent = "data:text/csv;charset=utf-8,";
-        
-        // Header
-        csvContent += `FM-200 Bill of Quantities Export\r\n`;
-        csvContent += `Project: ${formData.projectName}\r\n`;
-        csvContent += `Date: ${new Date().toLocaleDateString()}\r\n`;
-        csvContent += `\r\n`;
-        
-        // Items
-        csvContent += `Item,Quantity,Unit Price (INR),Total (INR)\r\n`;
-        
-        const items = [
-            [`FM-200 Agent`, calculationResults.agentWeight, this.costMultipliers.agentCostPerKg, costResults.agentCost],
-            [`Storage Cylinders`, calculationResults.cylinderCount, this.costMultipliers.cylinderCost, costResults.cylinderCost],
-            [`Nozzles`, calculationResults.nozzleCount, this.costMultipliers.nozzleCost, costResults.nozzleCost],
-            [`Piping (${calculationResults.pipingLength}m)`, calculationResults.pipingLength, this.costMultipliers.pipingCostPerMeter, costResults.pipingCost],
-            [`Detection Panel`, 1, this.costMultipliers.detectionPanel, costResults.detectionCost]
-        ];
-        
-        items.forEach(item => {
-            csvContent += `${item[0]},${item[1]},${item[2].toFixed(2)},${item[3].toFixed(2)}\r\n`;
-        });
-        
-        csvContent += `\r\n`;
-        csvContent += `Subtotal,,,${costResults.equipmentSubtotal.toFixed(2)}\r\n`;
-        csvContent += `Installation & Engineering,,,${costResults.laborSubtotal.toFixed(2)}\r\n`;
-        csvContent += `Additional Factors,,,${(costResults.installationFactorCost + costResults.engineeringFactorCost + costResults.contingency).toFixed(2)}\r\n`;
-        csvContent += `GRAND TOTAL,,,${costResults.totalINR.toFixed(2)}\r\n`;
-        
-        // Create download link
-        const encodedUri = encodeURI(csvContent);
-        const link = document.createElement("a");
-        link.setAttribute("href", encodedUri);
-        link.setAttribute("download", `FM200_BOQ_${formData.projectName.replace(/\s+/g, '_')}_${new Date().toISOString().slice(0,10)}.csv`);
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        
-        this.showNotification('BOQ exported as CSV file', 'success');
+        if (!this.currentData) {
+            this.showNotification('No data to export. Please generate calculations first.', 'warning');
+            return;
+        }
+
+        try {
+            const { formData, calculationResults } = this.currentData;
+            const costs = this.calculateSystemCosts(calculationResults);
+            
+            let csvContent = "data:text/csv;charset=utf-8,";
+            csvContent += "FM-200 Calculation Results\n";
+            csvContent += `Project: ${formData.projectName || 'Unnamed Project'}\n`;
+            csvContent += `Date: ${new Date().toLocaleDateString()}\n\n`;
+            
+            csvContent += "Calculation Parameters\n";
+            csvContent += `Room Volume,${calculationResults.netVolume} m³\n`;
+            csvContent += `Design Temperature,${calculationResults.designTemperature} °C\n`;
+            csvContent += `Design Concentration,${calculationResults.concentration}%\n`;
+            csvContent += `Altitude,${calculationResults.altitude} m\n\n`;
+            
+            csvContent += "System Requirements\n";
+            csvContent += `FM-200 Agent Required,${calculationResults.agentWeight} kg\n`;
+            csvContent += `Cylinders Required,${calculationResults.cylinderCount}\n`;
+            csvContent += `Nozzles Required,${calculationResults.nozzleCount}\n`;
+            csvContent += `Piping Length,${calculationResults.pipingLength} m\n\n`;
+            
+            csvContent += "Cost Estimate (INR)\n";
+            csvContent += `Equipment Subtotal,${costs.equipmentSubtotal.toLocaleString('en-IN')}\n`;
+            csvContent += `Installation (28%),${costs.installationFactorCost.toLocaleString('en-IN')}\n`;
+            csvContent += `Engineering (15%),${costs.engineeringFactorCost.toLocaleString('en-IN')}\n`;
+            csvContent += `Contingency (18%),${costs.contingency.toLocaleString('en-IN')}\n`;
+            csvContent += `GRAND TOTAL,${costs.totalINR.toLocaleString('en-IN')}\n`;
+            
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", `FM200_Results_${formData.projectName || 'Project'}_${new Date().toISOString().slice(0,10)}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            this.showNotification('Results exported as CSV file successfully!', 'success');
+        } catch (error) {
+            console.error('Export error:', error);
+            this.showNotification('Error exporting data. Please try again.', 'error');
+        }
+    }
+
+    copyBOQToClipboard() {
+        if (!this.currentData) {
+            this.showNotification('No data to copy. Please generate calculations first.', 'warning');
+            return;
+        }
+
+        try {
+            const { formData, calculationResults } = this.currentData;
+            const costs = this.calculateSystemCosts(calculationResults);
+            
+            const textToCopy = `
+FM-200 CALCULATION RESULTS
+==========================
+Project: ${formData.projectName || 'Unnamed Project'}
+Date: ${new Date().toLocaleDateString()}
+
+CALCULATION SUMMARY:
+- Room Volume: ${calculationResults.netVolume} m³
+- FM-200 Agent Required: ${calculationResults.agentWeight} kg
+- Cylinders Required: ${calculationResults.cylinderCount} x 54.4 kg
+- Nozzles Required: ${calculationResults.nozzleCount}
+- Piping Length: ${calculationResults.pipingLength} m
+
+COST ESTIMATE (INR):
+- Equipment & Materials: ${this.formatCurrency(costs.equipmentSubtotal)}
+- Installation (28%): ${this.formatCurrency(costs.installationFactorCost)}
+- Engineering (15%): ${this.formatCurrency(costs.engineeringFactorCost)}
+- Tax & Contingency (18%): ${this.formatCurrency(costs.contingency)}
+- GRAND TOTAL: ${this.formatCurrency(costs.totalINR)}
+
+Note: This is a preliminary estimate. Consult with certified professionals for final design.
+
+Generated by FM-200 Calculator
+https://fm-200-room-flooding-system-calcula.vercel.app/
+            `.trim();
+            
+            navigator.clipboard.writeText(textToCopy).then(() => {
+                this.showNotification('BOQ copied to clipboard successfully!', 'success');
+            }).catch(err => {
+                console.error('Copy failed:', err);
+                this.showNotification('Could not copy to clipboard. Please try again.', 'error');
+            });
+        } catch (error) {
+            console.error('Copy error:', error);
+            this.showNotification('Error copying data. Please try again.', 'error');
+        }
+    }
+
+    emailBOQ() {
+        if (!this.currentData) {
+            this.showNotification('No data to email. Please generate calculations first.', 'warning');
+            return;
+        }
+
+        try {
+            const { formData, calculationResults } = this.currentData;
+            const costs = this.calculateSystemCosts(calculationResults);
+            
+            const subject = encodeURIComponent(`FM-200 Calculation Results - ${formData.projectName || 'Project'}`);
+            const body = encodeURIComponent(`
+FM-200 CALCULATION RESULTS
+
+Project: ${formData.projectName || 'Unnamed Project'}
+Date: ${new Date().toLocaleDateString()}
+
+CALCULATION PARAMETERS:
+- Room Volume: ${calculationResults.netVolume} m³
+- Design Temperature: ${calculationResults.designTemperature} °C
+- Design Concentration: ${calculationResults.concentration}%
+- Altitude: ${calculationResults.altitude} m
+
+SYSTEM REQUIREMENTS:
+- FM-200 Agent Required: ${calculationResults.agentWeight} kg
+- Cylinders Required: ${calculationResults.cylinderCount} x 54.4 kg
+- Nozzles Required: ${calculationResults.nozzleCount}
+- Piping Length: ${calculationResults.pipingLength} m
+
+COST ESTIMATE (INR):
+- Equipment & Materials: ${this.formatCurrency(costs.equipmentSubtotal)}
+- Installation (28%): ${this.formatCurrency(costs.installationFactorCost)}
+- Engineering (15%): ${this.formatCurrency(costs.engineeringFactorCost)}
+- Tax & Contingency (18%): ${this.formatCurrency(costs.contingency)}
+- GRAND TOTAL: ${this.formatCurrency(costs.totalINR)}
+
+This is a preliminary estimate generated by FM-200 Calculator.
+Please consult with certified fire protection engineers for final design.
+
+Generated by: https://fm-200-room-flooding-system-calcula.vercel.app/
+            `.trim());
+            
+            const mailtoLink = `mailto:?subject=${subject}&body=${body}`;
+            window.location.href = mailtoLink;
+        } catch (error) {
+            console.error('Email error:', error);
+            this.showNotification('Error preparing email. Please try again.', 'error');
+        }
     }
 
     // ============================================================================
-    // QUOTATION PAGE
+    // QUOTATION PAGE METHODS
     // ============================================================================
 
     initQuotationPage() {
         console.log('Initializing Quotation Page');
         
+        this.loadCalculationData();
         this.setQuotationDates();
-        this.loadQuotationData();
+        this.setupQuotationFormListeners();
         
+        // If we have calculation data, auto-fill the form
+        if (this.currentData) {
+            this.autoFillQuotationForm();
+        }
+        
+        console.log('Quotation Page Initialized');
+    }
+
+    setQuotationDates() {
+        const today = new Date();
+        const nextMonth = new Date(today);
+        nextMonth.setMonth(nextMonth.getMonth() + 1);
+        
+        const dateField = document.getElementById('quotationDate');
+        const validField = document.getElementById('validUntil');
+        
+        if (dateField) dateField.value = today.toISOString().split('T')[0];
+        if (validField) validField.value = nextMonth.toISOString().split('T')[0];
+    }
+
+    setupQuotationFormListeners() {
+        // Auto-fill button
         const autoFillBtn = document.getElementById('autoFill');
         if (autoFillBtn) {
             autoFillBtn.addEventListener('click', () => {
                 this.autoFillQuotationForm();
             });
         }
-
-        const generatePDFBtn = document.getElementById('generatePDF');
-        if (generatePDFBtn) {
-            generatePDFBtn.addEventListener('click', () => {
-                this.generateQuotationPDF();
-            });
-        }
-
-        // Live form updates
-        this.setupQuotationFormUpdates();
         
-        console.log('Quotation Page Initialized');
-    }
-
-    setQuotationDates() {
-        const today = new Date().toISOString().split('T')[0];
-        const nextMonth = new Date();
-        nextMonth.setMonth(nextMonth.getMonth() + 1);
-        const validUntil = nextMonth.toISOString().split('T')[0];
-
-        const dateField = document.getElementById('quotationDate');
-        const validField = document.getElementById('validUntil');
-
-        if (dateField) dateField.value = today;
-        if (validField) validField.value = validUntil;
-        
-        // Update preview
-        this.updateQuotationPreview();
-    }
-
-    loadQuotationData() {
-        try {
-            const dataJson = sessionStorage.getItem(APP_CONFIG.storageKeys.BUDGET_DATA);
-            if (dataJson) {
-                this.currentData = JSON.parse(dataJson);
-                console.log('Quotation data loaded from calculator');
-                
-                // Calculate costs for quotation
-                const costResults = this.calculateSystemCosts(this.currentData.calculationResults);
-                this.currentData.costResults = costResults;
-                
-                // Auto-fill if data exists
-                this.autoFillQuotationForm();
-            }
-        } catch (e) {
-            console.error('Error loading quotation data:', e);
-        }
-    }
-
-    autoFillQuotationForm() {
-        if (!this.currentData) {
-            this.showNotification('No calculation data available for auto-fill. Please use calculator first.', 'warning');
-            return;
-        }
-        
-        const { formData, calculationResults, costResults } = this.currentData;
-
-        // Generate quotation number
-        const quoteNumber = `Q-FM200-${new Date().getFullYear()}-${String(Math.floor(Math.random() * 1000)).padStart(3, '0')}`;
-        
-        // Set form values
-        this.setFormValue('quotationNumber', quoteNumber);
-        this.setFormValue('clientName', formData.projectName);
-        this.setFormValue('clientAddress', formData.clientLocation);
-        
-        // Set scope of work
-        const scopeOfWork = `Design, Supply, Installation, and Commissioning of FM-200 Fire Suppression System as per NFPA 2001 standard for ${calculationResults.netVolume} m³ room volume. System includes ${calculationResults.cylinderCount} cylinders, ${calculationResults.nozzleCount} nozzles, and complete detection system.`;
-        this.setFormValue('scopeOfWork', scopeOfWork);
-        
-        // Update preview
-        this.updateQuotationPreview();
-        
-        this.showNotification('Quotation form auto-filled with project data', 'success');
-    }
-
-    setupQuotationFormUpdates() {
         // Update preview on form changes
         const formElements = [
             'quotationNumber', 'quotationDate', 'validUntil', 'currency',
             'clientName', 'clientContact', 'clientEmail', 'clientPhone', 'clientAddress',
             'senderName', 'senderEmail', 'senderPhone', 'senderWebsite',
-            'paymentTerms', 'scopeOfWork'
+            'paymentTerms', 'deliveryTime', 'scopeOfWork'
         ];
         
         formElements.forEach(id => {
@@ -1063,189 +997,100 @@ class FM200Calculator {
         });
     }
 
-    updateQuotationPreview() {
-        // Update preview elements with form values
-        const previewMappings = {
-            'quotationNumber': 'previewQuoteNumber',
-            'quotationDate': 'previewDate',
-            'validUntil': 'previewValidUntil',
-            'currency': 'previewCurrency',
-            'clientName': 'previewClientName',
-            'clientContact': 'previewClientContact',
-            'clientEmail': 'previewClientEmail',
-            'clientPhone': 'previewClientPhone',
-            'senderName': 'previewSenderName',
-            'senderEmail': 'previewSenderEmail',
-            'senderPhone': 'previewSenderPhone',
-            'senderWebsite': 'previewSenderWebsite',
-            'paymentTerms': 'previewPaymentTerms',
-            'scopeOfWork': 'previewScopeOfWork'
-        };
-
-        for (const [formId, previewId] of Object.entries(previewMappings)) {
-            const formElement = document.getElementById(formId);
-            const previewElement = document.getElementById(previewId);
-            
-            if (formElement && previewElement) {
-                previewElement.textContent = formElement.value || '--';
-            }
+    autoFillQuotationForm() {
+        if (!this.currentData) {
+            this.showNotification('No calculation data found. Please use the calculator first.', 'warning');
+            window.location.href = 'index.html';
+            return;
         }
+        
+        const { formData, calculationResults } = this.currentData;
+        
+        // Generate unique quotation number
+        const quoteNumber = `Q-FM200-${new Date().getFullYear()}-${String(Math.floor(Math.random() * 1000)).padStart(3, '0')}`;
+        this.setFormValue('quotationNumber', quoteNumber);
+        
+        // Auto-fill client information
+        this.setFormValue('clientName', formData.projectName || 'FM-200 Project');
+        this.setFormValue('clientContact', 'Project Manager');
+        this.setFormValue('clientEmail', 'info@clientcompany.com');
+        this.setFormValue('clientPhone', '+91-XXXXXXXXXX');
+        this.setFormValue('clientAddress', formData.clientLocation || 'Client Location');
+        
+        // Update scope of work
+        const scopeOfWork = `Design, Supply, Installation, and Commissioning of FM-200 Fire Suppression System as per NFPA 2001 standard for ${calculationResults.netVolume} m³ room volume. System includes ${calculationResults.cylinderCount} cylinders (${calculationResults.cylinderSize} kg each), ${calculationResults.nozzleCount} nozzles, complete detection system, piping network, and commissioning services.`;
+        this.setFormValue('scopeOfWork', scopeOfWork);
+        
+        // Update preview
+        this.updateQuotationPreview();
+        
+        this.showNotification('Quotation form auto-filled with calculation data!', 'success');
+    }
 
+    updateQuotationPreview() {
+        // Update all preview fields from form values
+        this.updatePreviewField('quotationNumber', 'previewQuoteNumber');
+        this.updatePreviewField('quotationDate', 'previewDate', true);
+        this.updatePreviewField('validUntil', 'previewValidUntil', true);
+        this.updatePreviewField('currency', 'previewCurrency');
+        this.updatePreviewField('clientName', 'previewClientName');
+        this.updatePreviewField('clientContact', 'previewClientContact');
+        this.updatePreviewField('clientEmail', 'previewClientEmail');
+        this.updatePreviewField('clientPhone', 'previewClientPhone');
+        this.updatePreviewField('clientAddress', 'previewClientAddress');
+        this.updatePreviewField('senderName', 'previewSenderName');
+        this.updatePreviewField('senderEmail', 'previewSenderEmail');
+        this.updatePreviewField('senderPhone', 'previewSenderPhone');
+        this.updatePreviewField('senderWebsite', 'previewSenderWebsite');
+        this.updatePreviewField('paymentTerms', 'previewPaymentTerms');
+        this.updatePreviewField('deliveryTime', 'previewDeliveryTime');
+        this.updatePreviewField('scopeOfWork', 'previewScopeOfWork');
+        
+        // Update other preview fields
+        this.updatePreviewField('senderName', 'finalSenderName');
+        this.updatePreviewField('paymentTerms', 'finalPaymentTerms');
+        this.updatePreviewField('deliveryTime', 'finalDeliveryTime');
+        this.setElementText('finalCurrency', 'INR');
+        
         // Update calculation results if available
         if (this.currentData) {
-            const { calculationResults, costResults } = this.currentData;
+            const { calculationResults } = this.currentData;
+            const costs = this.calculateSystemCosts(calculationResults);
             
             this.setElementText('previewRoomVolume', `${calculationResults.netVolume} m³`);
             this.setElementText('previewAgentWeight', `${calculationResults.agentWeight} kg`);
             this.setElementText('previewCylinderCount', `${calculationResults.cylinderCount} pcs`);
             this.setElementText('previewNozzleCount', `${calculationResults.nozzleCount} pcs`);
             
-            // Update cost table
-            const systemCost = costResults.agentCost + costResults.cylinderCost + costResults.valveCost + 
-                             costResults.mountingCost + costResults.nozzleCost + costResults.pipingCost + 
-                             costResults.fittingsCost + costResults.detectionCost + costResults.smokeDetectors + 
-                             costResults.heatDetectors + costResults.manualCallPoints + costResults.hooterStrobes + 
-                             costResults.warningSigns;
-            
-            const installationCost = costResults.installationLabor;
-            const engineeringCost = costResults.engineeringDesign + costResults.commissioningTesting + costResults.documentation;
-            const contingencyCost = costResults.installationFactorCost + costResults.engineeringFactorCost + costResults.contingency;
-            
-            this.setElementText('previewSystemCost', this.formatCurrency(systemCost, 'INR'));
-            this.setElementText('previewInstallationCost', this.formatCurrency(installationCost, 'INR'));
-            this.setElementText('previewEngineeringCost', this.formatCurrency(engineeringCost, 'INR'));
-            this.setElementText('previewContingencyCost', this.formatCurrency(contingencyCost, 'INR'));
-            
-            const totalCost = systemCost + installationCost + engineeringCost + contingencyCost;
-            this.setElementText('previewTotalCost', this.formatCurrency(totalCost, 'INR'));
-            
-            // Update currency in terms
-            const finalCurrencyElement = document.getElementById('finalCurrency');
-            if (finalCurrencyElement) {
-                finalCurrencyElement.textContent = 'INR';
-            }
+            this.setElementText('previewSystemCost', this.formatCurrency(costs.equipmentSubtotal));
+            this.setElementText('previewInstallationCost', this.formatCurrency(costs.installationFactorCost));
+            this.setElementText('previewEngineeringCost', this.formatCurrency(costs.engineeringFactorCost));
+            this.setElementText('previewContingencyCost', this.formatCurrency(costs.contingency));
+            this.setElementText('previewTotalCost', this.formatCurrency(costs.totalINR));
         }
     }
 
-    generateQuotationPDF() {
-        try {
-            const previewElement = document.getElementById('quotationPreview');
-            if (!previewElement) {
-                this.showNotification('Cannot generate PDF. Preview not found.', 'error');
-                return;
+    updatePreviewField(sourceId, targetId, formatDate = false) {
+        const sourceElement = document.getElementById(sourceId);
+        const targetElement = document.getElementById(targetId);
+        
+        if (sourceElement && targetElement) {
+            let value = sourceElement.value;
+            
+            if (formatDate && value) {
+                try {
+                    const date = new Date(value);
+                    value = date.toLocaleDateString('en-IN', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric'
+                    });
+                } catch (e) {
+                    // Keep original value if date parsing fails
+                }
             }
-
-            // Create a print-friendly version
-            const printWindow = window.open('', '_blank');
             
-            // Get form data
-            const quoteNumber = document.getElementById('quotationNumber')?.value || 'Q-FM200-2024-001';
-            const quoteDate = document.getElementById('quotationDate')?.value || new Date().toISOString().split('T')[0];
-            const clientName = document.getElementById('clientName')?.value || 'Client Name';
-            
-            printWindow.document.write(`
-                <!DOCTYPE html>
-                <html>
-                <head>
-                    <title>FM-200 Quotation - ${quoteNumber}</title>
-                    <style>
-                        body {
-                            font-family: Arial, sans-serif;
-                            margin: 40px;
-                            color: #333;
-                            line-height: 1.6;
-                        }
-                        .header {
-                            text-align: center;
-                            margin-bottom: 40px;
-                            border-bottom: 3px solid #ff4c4c;
-                            padding-bottom: 20px;
-                        }
-                        .header h1 {
-                            color: #ff4c4c;
-                            margin: 0;
-                        }
-                        .info-section {
-                            margin-bottom: 30px;
-                            display: flex;
-                            justify-content: space-between;
-                        }
-                        .sender-info, .client-info {
-                            width: 48%;
-                        }
-                        .client-info {
-                            border-left: 3px solid #0099e5;
-                            padding-left: 15px;
-                        }
-                        table {
-                            width: 100%;
-                            border-collapse: collapse;
-                            margin: 20px 0;
-                        }
-                        th {
-                            background: #ff4c4c;
-                            color: white;
-                            padding: 12px;
-                            text-align: left;
-                        }
-                        td {
-                            padding: 10px;
-                            border: 1px solid #ddd;
-                        }
-                        .total-row {
-                            background: #34bf49;
-                            color: white;
-                            font-weight: bold;
-                        }
-                        .terms {
-                            margin-top: 40px;
-                            padding: 20px;
-                            border: 1px solid #ddd;
-                            border-radius: 5px;
-                        }
-                        .signature {
-                            margin-top: 60px;
-                            text-align: right;
-                            font-style: italic;
-                        }
-                        @media print {
-                            body { margin: 20px; }
-                            .no-print { display: none; }
-                        }
-                    </style>
-                </head>
-                <body>
-                    <div class="header">
-                        <h1>FM-200 FIRE SUPPRESSION SYSTEM QUOTATION</h1>
-                        <h2>Quotation Number: ${quoteNumber}</h2>
-                        <p>Date: ${quoteDate}</p>
-                    </div>
-                    
-                    ${previewElement.innerHTML}
-                    
-                    <div class="no-print" style="margin-top: 40px; text-align: center;">
-                        <button onclick="window.print()" style="padding: 12px 30px; background: #ff4c4c; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; margin-right: 15px;">
-                            <i class="fas fa-print"></i> Print Quotation
-                        </button>
-                        <button onclick="window.close()" style="padding: 12px 30px; background: #666; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 16px;">
-                            Close Window
-                        </button>
-                    </div>
-                </body>
-                </html>
-            `);
-            printWindow.document.close();
-            
-            // Auto-print after a short delay
-            setTimeout(() => {
-                printWindow.print();
-            }, 1000);
-            
-            this.showNotification('Quotation generated. Printing preview...', 'success');
-            
-        } catch (error) {
-            console.error('Error generating quotation PDF:', error);
-            this.showNotification('Error generating quotation. Please try again.', 'error');
+            targetElement.textContent = value || '--';
         }
     }
 
@@ -1259,16 +1104,11 @@ class FM200Calculator {
         return Math.round(value * factor) / factor;
     }
 
-    formatCurrency(amount, currency = 'INR') {
-        try {
-            let symbol = '₹';
-            let formattedAmount = amount.toFixed(2);
-            
-            formattedAmount = formattedAmount.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-            return `${symbol} ${formattedAmount}`;
-        } catch (error) {
-            return `₹ ${amount.toFixed(2)}`;
-        }
+    formatCurrency(amount) {
+        return '₹ ' + amount.toLocaleString('en-IN', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        });
     }
 
     setElementText(elementId, text) {
@@ -1294,6 +1134,7 @@ class FM200Calculator {
     showNotification(message, type = 'info') {
         console.log(`[${type.toUpperCase()}] ${message}`);
         
+        // Create notification element
         const notification = document.createElement('div');
         notification.className = `notification notification-${type}`;
         notification.textContent = message;
@@ -1307,8 +1148,8 @@ class FM200Calculator {
             font-weight: bold;
             z-index: 10000;
             animation: slideInRight 0.3s ease;
-            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
             max-width: 400px;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
         `;
         
         switch(type) {
@@ -1327,6 +1168,7 @@ class FM200Calculator {
         
         document.body.appendChild(notification);
         
+        // Remove after 5 seconds
         setTimeout(() => {
             notification.style.animation = 'slideOutRight 0.3s ease';
             setTimeout(() => {
@@ -1340,6 +1182,7 @@ class FM200Calculator {
     initThemeToggle() {
         const toggleBtn = document.getElementById('themeToggle');
         if (toggleBtn) {
+            // Set initial theme
             if (this.userPrefs.theme === 'dark') {
                 document.body.classList.add('dark-mode');
                 toggleBtn.innerHTML = '<i class="fas fa-sun"></i>';
@@ -1348,6 +1191,7 @@ class FM200Calculator {
                 toggleBtn.innerHTML = '<i class="fas fa-moon"></i>';
             }
             
+            // Toggle theme
             toggleBtn.addEventListener('click', () => {
                 if (document.body.classList.contains('dark-mode')) {
                     document.body.classList.remove('dark-mode');
@@ -1457,12 +1301,12 @@ document.head.appendChild(notificationStyle);
 
 // Initialize when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
-    console.log('FM-200 Calculator v5.2 - Initializing...');
+    console.log('FM-200 Calculator v6.1 - Initializing...');
     
     try {
         // Initialize calculator
         window.fm200Calculator = new FM200Calculator();
-        console.log('FM-200 Calculator v5.2 - Ready!');
+        console.log('FM-200 Calculator v6.1 - Ready!');
     } catch (error) {
         console.error('Failed to initialize FM-200 Calculator:', error);
         
