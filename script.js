@@ -1,3 +1,16 @@
+// Ensure jQuery is loaded (if needed)
+if (typeof jQuery === 'undefined') {
+    console.warn('jQuery not found, loading from CDN');
+    const script = document.createElement('script');
+    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js';
+    script.onload = () => console.log('jQuery loaded successfully');
+    document.head.appendChild(script);
+}
+
+// Ensure toastr is available
+if (typeof toastr === 'undefined') {
+    console.warn('toastr not found, but will use custom notifications');
+}
 // FM-200 Calculator - Complete Application Logic
 // Version 4.0 - Professional Edition with Print Functionality
 // UPDATED: Added robust error handling and fallbacks
