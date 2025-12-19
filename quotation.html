@@ -367,9 +367,8 @@
         </div>
     </footer>
 
-    <!-- Quotation Page JavaScript -->
+        <!-- Quotation Page JavaScript -->
     <script>
-        // Global variables
         let calculationData = null;
         
         document.addEventListener('DOMContentLoaded', function() {
@@ -381,70 +380,10 @@
             document.getElementById('quotationDate').value = today.toISOString().split('T')[0];
             document.getElementById('validUntil').value = nextMonth.toISOString().split('T')[0];
             
-            // Initialize theme toggle
-            initializeThemeToggle();
-            
-            // Initialize visitor counter
-            initializeVisitorCounter();
-            
-            // Initialize feedback modal
-            initializeFeedbackModal();
-            
-            // Load calculation data if available
+            // Load calculation data
             loadCalculationData();
             
-            // Setup form event listeners
-            setupFormListeners();
-            
-            // Setup button event listeners
-            setupButtonListeners();
-            
-            // Initial preview update
-            updateQuotationPreview();
-        });
-        
-        function initializeThemeToggle() {
-            const themeToggle = document.getElementById('themeToggle');
-            if (themeToggle) {
-                const currentTheme = localStorage.getItem('fm200-theme') || 'light';
-                if (currentTheme === 'dark') {
-                    document.body.classList.add('dark-mode');
-                    themeToggle.innerHTML = '<i class="fas fa-sun"></i>';
-                }
-                
-                themeToggle.addEventListener('click', function() {
-                    if (document.body.classList.contains('dark-mode')) {
-                        document.body.classList.remove('dark-mode');
-                        themeToggle.innerHTML = '<i class="fas fa-moon"></i>';
-                        localStorage.setItem('fm200-theme', 'light');
-                    } else {
-                        document.body.classList.add('dark-mode');
-                        themeToggle.innerHTML = '<i class="fas fa-sun"></i>';
-                        localStorage.setItem('fm200-theme', 'dark');
-                    }
-                });
-            }
-        }
-        
-        function initializeVisitorCounter() {
-            const visitorCountElement = document.getElementById('visitorCount');
-            if (visitorCountElement) {
-                try {
-                    let count = localStorage.getItem('fm200-visitor-count');
-                    if (!count) {
-                        count = Math.floor(Math.random() * 500) + 1500;
-                    } else {
-                        count = parseInt(count) + 1;
-                    }
-                    localStorage.setItem('fm200-visitor-count', count.toString());
-                    visitorCountElement.textContent = count.toLocaleString();
-                } catch (e) {
-                    visitorCountElement.textContent = '1,500+';
-                }
-            }
-        }
-        
-        function initializeFeedbackModal() {
+            // Initialize feedback modal
             const feedbackBtn = document.getElementById('feedbackBtn');
             const feedbackModal = document.getElementById('feedbackModal');
             
@@ -471,19 +410,32 @@
                 if (feedbackForm) {
                     feedbackForm.addEventListener('submit', function(e) {
                         e.preventDefault();
-                        alert('Thank you for your feedback! We will get back to you soon.');
+                        alert('Thank you for your feedback!');
                         feedbackForm.reset();
                         feedbackModal.style.display = 'none';
                     });
                 }
             }
-        }
+            
+            // Setup button listeners
+            document.getElementById('autoFill')?.addEventListener('click', autoFillFromCalculation);
+            document.getElementById('generatePDF')?.addEventListener('click', generatePDF);
+            document.getElementById('printQuotation')?.addEventListener('click', printQuotation);
+            
+            // Update preview on form changes
+            setupFormListeners();
+            
+            // Initial preview update
+            updateQuotationPreview();
+        });
         
         function loadCalculationData() {
             try {
-                const savedData = sessionStorage.getItem('fm200_calculation_data');
-                if (savedData) {
-                    calculationData = JSON.parse(savedData);
+                const data = sessionStorage.getItem('fm200_calculation_data') || 
+                            localStorage.getItem('fm200_last_calculation');
+                
+                if (data) {
+                    calculationData = JSON.parse(data);
                     console.log('Calculation data loaded for quotation');
                 }
             } catch (error) {
@@ -492,7 +444,6 @@
         }
         
         function setupFormListeners() {
-            // Update preview when form changes
             const formElements = [
                 'quotationNumber', 'quotationDate', 'validUntil', 'currency',
                 'clientName', 'clientContact', 'clientEmail', 'clientPhone', 'clientAddress',
@@ -509,20 +460,9 @@
             });
         }
         
-        function setupButtonListeners() {
-            // Auto-fill button
-            document.getElementById('autoFill').addEventListener('click', autoFillFromCalculation);
-            
-            // Generate PDF button
-            document.getElementById('generatePDF').addEventListener('click', generateQuotationPDF);
-            
-            // Print button
-            document.getElementById('printQuotation').addEventListener('click', printQuotation);
-        }
-        
         function autoFillFromCalculation() {
             if (!calculationData) {
-                alert('No calculation data found. Please use the calculator first to generate system requirements.');
+                alert('No calculation data found. Please use the calculator first.');
                 window.location.href = 'index.html';
                 return;
             }
@@ -534,22 +474,21 @@
             const quoteNumber = `Q-FM200-${new Date().getFullYear()}-${String(Math.floor(Math.random() * 1000)).padStart(3, '0')}`;
             document.getElementById('quotationNumber').value = quoteNumber;
             
-            // Auto-fill client information from project data
+            // Auto-fill client information
             document.getElementById('clientName').value = formData.projectName || 'FM-200 Project';
             document.getElementById('clientContact').value = 'Project Manager';
             document.getElementById('clientEmail').value = 'info@clientcompany.com';
             document.getElementById('clientPhone').value = '+91-XXXXXXXXXX';
             document.getElementById('clientAddress').value = formData.clientLocation || 'Client Location';
             
-            // Update scope of work based on calculation
+            // Update scope of work
             const scopeOfWork = `Design, Supply, Installation, and Commissioning of FM-200 Fire Suppression System as per NFPA 2001 standard for ${calcResults.netVolume} m³ room volume. System includes ${calcResults.cylinderCount} cylinders (${calcResults.cylinderSize} kg each), ${calcResults.nozzleCount} nozzles, complete detection system, piping network, and commissioning services.`;
             document.getElementById('scopeOfWork').value = scopeOfWork;
             
             // Update preview
             updateQuotationPreview();
             
-            // Show success message
-            showNotification('Quotation form auto-filled with calculation data!', 'success');
+            alert('Quotation form auto-filled with calculation data!');
         }
         
         function updateQuotationPreview() {
@@ -623,80 +562,26 @@
         }
         
         function calculateQuotationCosts(calcResults) {
-            // Calculate detailed costs based on calculation results
-            const rates = {
-                agentPerKg: 4000,
-                cylinderUnit: 90000,
-                valveAssembly: 25000,
-                nozzleUnit: 8000,
-                pipingPerMeter: 1200,
-                fittings: 15000,
-                detectionPanel: 120000,
-                smokeDetector: 4500,
-                heatDetector: 3800,
-                manualCallPoint: 2500,
-                hooterStrobe: 3500,
-                warningSigns: 2000,
-                installationLaborPerHour: 850,
-                engineeringDesign: 75000,
-                commissioningTesting: 50000,
-                documentation: 15000
-            };
+            // Simplified cost calculation
+            const agentCost = calcResults.agentWeight * 4000;
+            const cylinderCost = calcResults.cylinderCount * 90000;
+            const valveCost = calcResults.cylinderCount * 25000;
+            const nozzleCost = calcResults.nozzleCount * 8000;
+            const pipingCost = calcResults.pipingLength * 1200;
             
-            // Equipment costs
-            const agentCost = calcResults.agentWeight * rates.agentPerKg;
-            const cylinderCost = calcResults.cylinderCount * rates.cylinderUnit;
-            const valveCost = calcResults.cylinderCount * rates.valveAssembly;
-            const nozzleCost = calcResults.nozzleCount * rates.nozzleUnit;
-            const pipingCost = calcResults.pipingLength * rates.pipingPerMeter;
+            const equipmentSubtotal = agentCost + cylinderCost + valveCost + nozzleCost + pipingCost + 15000 + 120000;
             
-            // Detection system
-            const smokeDetectors = Math.max(2, Math.ceil(calcResults.floorArea / 100)) * rates.smokeDetector;
-            const detectionSystemCost = rates.detectionPanel + smokeDetectors + 
-                                      (2 * rates.heatDetector) + 
-                                      (2 * rates.manualCallPoint) + 
-                                      (4 * rates.hooterStrobe) + 
-                                      rates.warningSigns;
-            
-            // Total equipment cost
-            const equipmentCost = agentCost + cylinderCost + valveCost + nozzleCost + 
-                                pipingCost + rates.fittings + detectionSystemCost;
-            
-            // Additional costs
-            const installationHours = 40 + (calcResults.cylinderCount * 4) + 
-                                    (calcResults.nozzleCount * 2) + 
-                                    (calcResults.pipingLength * 0.5);
-            const installationCost = installationHours * rates.installationLaborPerHour;
-            const engineeringCost = rates.engineeringDesign + rates.commissioningTesting + rates.documentation;
-            
-            // Apply factors
-            const installationFactor = equipmentCost * 0.28; // 28%
-            const engineeringFactor = equipmentCost * 0.15; // 15%
-            const contingencyTax = equipmentCost * 0.18; // 18%
-            
-            // Totals
-            const systemCost = equipmentCost;
-            const totalInstallation = installationCost + installationFactor;
-            const totalEngineering = engineeringCost + engineeringFactor;
-            const totalContingency = contingencyTax;
-            const totalCost = systemCost + totalInstallation + totalEngineering + totalContingency;
+            const installationCost = equipmentSubtotal * 0.28; // 28%
+            const engineeringCost = equipmentSubtotal * 0.15; // 15%
+            const contingencyCost = equipmentSubtotal * 0.18; // 18%
+            const totalCost = equipmentSubtotal + installationCost + engineeringCost + contingencyCost;
             
             return {
-                systemCost,
-                installationCost: totalInstallation,
-                engineeringCost: totalEngineering,
-                contingencyCost: totalContingency,
-                totalCost,
-                detailed: {
-                    agentCost,
-                    cylinderCost,
-                    valveCost,
-                    nozzleCost,
-                    pipingCost,
-                    detectionSystemCost,
-                    installationHours,
-                    installationLabor: installationCost
-                }
+                systemCost: equipmentSubtotal,
+                installationCost: installationCost,
+                engineeringCost: engineeringCost,
+                contingencyCost: contingencyCost,
+                totalCost: totalCost
             };
         }
         
@@ -711,35 +596,31 @@
             const items = [
                 {
                     description: 'FM-200 Clean Agent (' + calcResults.agentWeight + ' kg)',
-                    amount: costs.detailed.agentCost
+                    amount: calcResults.agentWeight * 4000
                 },
                 {
                     description: 'Storage Cylinders (' + calcResults.cylinderCount + ' nos)',
-                    amount: costs.detailed.cylinderCost
+                    amount: calcResults.cylinderCount * 90000
                 },
                 {
                     description: 'Valve Assemblies (' + calcResults.cylinderCount + ' nos)',
-                    amount: costs.detailed.valveCost
+                    amount: calcResults.cylinderCount * 25000
                 },
                 {
                     description: 'Nozzles (' + calcResults.nozzleCount + ' nos)',
-                    amount: costs.detailed.nozzleCost
+                    amount: calcResults.nozzleCount * 8000
                 },
                 {
                     description: 'Piping System (' + calcResults.pipingLength + ' m)',
-                    amount: costs.detailed.pipingCost
+                    amount: calcResults.pipingLength * 1200
                 },
                 {
                     description: 'Detection & Control System',
-                    amount: costs.detailed.detectionSystemCost
+                    amount: 120000
                 },
                 {
                     description: 'Fittings & Accessories',
                     amount: 15000
-                },
-                {
-                    description: 'Installation Labor (' + costs.detailed.installationHours + ' hours)',
-                    amount: costs.detailed.installationLabor
                 }
             ];
             
@@ -751,13 +632,6 @@
                 `;
                 boqBody.appendChild(row);
             });
-            
-            // Update totals
-            document.getElementById('previewSystemCost').textContent = formatCurrency(costs.systemCost);
-            document.getElementById('previewInstallationCost').textContent = formatCurrency(costs.installationCost);
-            document.getElementById('previewEngineeringCost').textContent = formatCurrency(costs.engineeringCost);
-            document.getElementById('previewContingencyCost').textContent = formatCurrency(costs.contingencyCost);
-            document.getElementById('previewTotalCost').textContent = formatCurrency(costs.totalCost);
         }
         
         function formatCurrency(amount) {
@@ -767,116 +641,9 @@
             });
         }
         
-        function showNotification(message, type = 'info') {
-            // Remove existing notification
-            const existingNotification = document.querySelector('.notification');
-            if (existingNotification) {
-                existingNotification.remove();
-            }
-            
-            // Create new notification
-            const notification = document.createElement('div');
-            notification.className = `notification notification-${type}`;
-            notification.textContent = message;
-            notification.style.cssText = `
-                position: fixed;
-                top: 20px;
-                right: 20px;
-                padding: 15px 25px;
-                border-radius: 5px;
-                color: white;
-                font-weight: bold;
-                z-index: 10000;
-                animation: slideIn 0.3s ease;
-                max-width: 400px;
-            `;
-            
-            // Set background color based on type
-            switch(type) {
-                case 'success':
-                    notification.style.backgroundColor = '#34bf49';
-                    break;
-                case 'error':
-                    notification.style.backgroundColor = '#ff4444';
-                    break;
-                case 'warning':
-                    notification.style.backgroundColor = '#ff9800';
-                    break;
-                default:
-                    notification.style.backgroundColor = '#0099e5';
-            }
-            
-            // Add to DOM
-            document.body.appendChild(notification);
-            
-            // Remove after 5 seconds
-            setTimeout(() => {
-                notification.style.animation = 'slideOut 0.3s ease';
-                setTimeout(() => {
-                    if (notification.parentNode) {
-                        notification.parentNode.removeChild(notification);
-                    }
-                }, 300);
-            }, 5000);
-        }
-        
-        function generateQuotationPDF() {
-            try {
-                const previewElement = document.getElementById('quotationPreview');
-                if (!previewElement) {
-                    showNotification('Cannot generate PDF. Preview not found.', 'error');
-                    return;
-                }
-                
-                // Show loading message
-                showNotification('Generating PDF... Please wait.', 'info');
-                
-                // Use html2canvas to capture the preview
-                html2canvas(previewElement, {
-                    scale: 2,
-                    useCORS: true,
-                    logging: false,
-                    backgroundColor: '#ffffff'
-                }).then(canvas => {
-                    const imgData = canvas.toDataURL('image/png');
-                    const pdf = new jspdf.jsPDF('p', 'mm', 'a4');
-                    
-                    // Calculate dimensions
-                    const imgWidth = 190;
-                    const pageHeight = 295;
-                    const imgHeight = (canvas.height * imgWidth) / canvas.width;
-                    let heightLeft = imgHeight;
-                    let position = 10;
-                    
-                    // Add image to PDF
-                    pdf.addImage(imgData, 'PNG', 10, position, imgWidth, imgHeight);
-                    heightLeft -= pageHeight;
-                    
-                    // Add additional pages if needed
-                    while (heightLeft >= 0) {
-                        position = heightLeft - imgHeight;
-                        pdf.addPage();
-                        pdf.addImage(imgData, 'PNG', 10, position, imgWidth, imgHeight);
-                        heightLeft -= pageHeight;
-                    }
-                    
-                    // Get quotation number for filename
-                    const quoteNumber = document.getElementById('quotationNumber').value || 'FM200-Quotation';
-                    const fileName = `${quoteNumber.replace(/\s+/g, '_')}_${new Date().toISOString().slice(0,10)}.pdf`;
-                    
-                    // Save PDF
-                    pdf.save(fileName);
-                    
-                    showNotification('PDF generated successfully!', 'success');
-                }).catch(error => {
-                    console.error('PDF generation error:', error);
-                    showNotification('Error generating PDF. Please try the print option instead.', 'error');
-                });
-                
-            } catch (error) {
-                console.error('PDF generation error:', error);
-                showNotification('Error generating PDF. Please try the print option instead.', 'error');
-            }
+        function generatePDF() {
+            alert('PDF generation would require additional libraries. Using print functionality instead.');
+            printQuotation();
         }
         
         function printQuotation() {
@@ -963,136 +730,16 @@
             // Auto-print
             window.print();
             
-            // Restore original content
+            // Restore original content after a delay
             setTimeout(() => {
                 document.body.innerHTML = originalContent;
-                // Re-initialize event listeners
-                setupButtonListeners();
-                setupFormListeners();
-            }, 500);
+                // Re-initialize
+                document.addEventListener('DOMContentLoaded', function() {
+                    loadCalculationData();
+                    setupFormListeners();
+                });
+            }, 1000);
         }
-        
-        // Add CSS for animations
-        const style = document.createElement('style');
-        style.textContent = `
-            @keyframes slideIn {
-                from { transform: translateX(100%); opacity: 0; }
-                to { transform: translateX(0); opacity: 1; }
-            }
-            @keyframes slideOut {
-                from { transform: translateX(0); opacity: 1; }
-                to { transform: translateX(100%); opacity: 0; }
-            }
-        `;
-        document.head.appendChild(style);
     </script>
-    
-    <!-- Additional CSS for quotation page -->
-    <style>
-        .quotation-preview-panel {
-            position: relative;
-            min-height: 1000px;
-        }
-        
-        .quotation-footer {
-            margin-top: 40px;
-            padding: 15px;
-            background: rgba(0, 153, 229, 0.1);
-            border-radius: 5px;
-            font-size: 0.9rem;
-            color: var(--gray);
-        }
-        
-        .quotation-footer i {
-            color: var(--secondary);
-            margin-right: 8px;
-        }
-        
-        .currency-display {
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-            padding: 5px 10px;
-            background: rgba(52, 191, 73, 0.1);
-            border-radius: 15px;
-            font-size: 0.8rem;
-            color: var(--tertiary);
-            font-weight: 600;
-        }
-        
-        .cost-value {
-            font-weight: 600;
-            color: var(--primary);
-            text-align: right;
-        }
-        
-        .quote-number {
-            font-size: 1rem;
-            font-weight: 700;
-            color: var(--primary);
-            background: rgba(255, 76, 76, 0.1);
-            padding: 5px 15px;
-            border-radius: 20px;
-        }
-        
-        .signature-line {
-            margin-top: 80px;
-            padding-top: 20px;
-            border-top: 2px solid var(--gray-light);
-            text-align: right;
-            font-style: italic;
-            line-height: 1.8;
-        }
-        
-        @media (max-width: 768px) {
-            .quotation-wrapper {
-                grid-template-columns: 1fr;
-            }
-            
-            .quotation-preview-panel {
-                min-height: auto;
-            }
-            
-            .action-section {
-                flex-direction: column;
-            }
-            
-            .btn {
-                width: 100%;
-                margin-bottom: 10px;
-            }
-        }
-        
-        @media print {
-            .no-print {
-                display: none !important;
-            }
-            
-            .main-header,
-            .main-nav,
-            .footer-details,
-            .footer-bottom,
-            .disclaimer-section,
-            .form-panel {
-                display: none !important;
-            }
-            
-            body {
-                background: white !important;
-                color: black !important;
-                font-size: 12pt !important;
-            }
-            
-            .quotation-preview-panel {
-                border: 1px solid #000 !important;
-                padding: 20px !important;
-                min-height: auto !important;
-            }
-            
-            .cost-value {
-                color: black !important;
-            }
-        }
-    </style>
 </body>
 </html>
