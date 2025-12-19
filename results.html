@@ -4,9 +4,18 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FM-200 Calculation Results | Fire Safety Tools</title>
+    <meta name="description" content="Detailed FM-200 calculation results with Bill of Quantities (BOQ) and cost estimate in Indian Rupees. Print or save as PDF.">
     
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- SEO Meta Tags -->
+    <meta name="keywords" content="FM-200 results, fire suppression BOQ, calculation results, cost estimate, Indian Rupees, PDF export">
+    <meta name="author" content="Amjath Khan">
+    <meta property="og:title" content="FM-200 Calculation Results | Fire Safety Tools">
+    <meta property="og:description" content="Detailed FM-200 calculation results with Bill of Quantities (BOQ)">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://fm-200-room-flooding-system-calcula.vercel.app/results.html">
 </head>
 <body>
     <div id="appNotification" class="notification"></div>
@@ -31,6 +40,7 @@
                 <a href="index.html"><i class="fas fa-calculator"></i> Calculator</a>
                 <a href="results.html" class="active"><i class="fas fa-chart-bar"></i> Results</a>
                 <a href="quotation.html"><i class="fas fa-file-invoice"></i> Quotation</a>
+                <a href="blog.html"><i class="fas fa-blog"></i> Blog</a>
             </nav>
         </div>
     </header>
@@ -97,11 +107,17 @@
                             <span>Total Nozzles:</span>
                             <strong id="nozzleCountResult">--</strong>
                         </div>
+                        <div class="grid-item">
+                            <i class="fas fa-ruler-combined"></i>
+                            <span>Piping Length:</span>
+                            <strong id="pipingLengthResult">-- m</strong>
+                        </div>
                     </div>
                 </div>
 
                 <div class="action-section result-actions">
                     <button id="printResults" class="btn btn-info"><i class="fas fa-print"></i> Print/Save as PDF</button>
+                    <button id="exportCSV" class="btn btn-secondary"><i class="fas fa-file-csv"></i> Export CSV</button>
                     <a href="quotation.html" class="btn btn-primary"><i class="fas fa-file-invoice-dollar"></i> Generate Quotation</a>
                     <a href="index.html" class="btn btn-secondary"><i class="fas fa-backward"></i> Back to Calculator</a>
                 </div>
@@ -109,66 +125,105 @@
             
             <div class="panel cost-panel">
                 <div class="panel-header">
-                    <div class="panel-icon"><i class="fas fa-dollar-sign"></i></div>
+                    <div class="panel-icon"><i class="fas fa-rupee-sign"></i></div>
                     <h2>Bill of Quantities (BOQ) & Cost Estimate</h2>
-                    <div class="currency-selector-wrapper">
-                        <i class="fas fa-exchange-alt"></i>
-                        <select id="currencySelect">
-                            <option value="USD">USD</option>
-                            <option value="EUR">EUR</option>
-                            <option value="INR">INR</option>
-                            <option value="AED">AED</option>
-                        </select>
+                    <div class="currency-display">
+                        <i class="fas fa-rupee-sign"></i> All prices in Indian Rupees (INR)
                     </div>
                 </div>
 
                 <div class="exchange-rate">
-                    <i class="fas fa-exchange-alt"></i> Exchange Rate: 1 USD = <span id="exchangeRateDisplay">1.0000</span>
+                    <i class="fas fa-info-circle"></i> 
+                    <span>Preliminary cost estimate based on standard rates. Includes GST where applicable.</span>
                 </div>
                 
                 <table id="boqTable" class="data-table boq-table">
                     <thead>
                         <tr>
-                            <th>Item</th>
+                            <th>Item Description</th>
                             <th>Qty</th>
-                            <th>Unit Price (<span class="currency-symbol">USD</span>)</th>
-                            <th>Total (<span class="currency-symbol">USD</span>)</th>
+                            <th>Unit Price (₹)</th>
+                            <th>Total Amount (₹)</th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody id="boqTableBody">
                         <tr>
-                            <td colspan="4" style="text-align: center; color: #666; padding: 20px;">
-                                <i class="fas fa-calculator"></i><br>
-                                Calculate system requirements first to view BOQ
+                            <td colspan="4" style="text-align: center; color: #666; padding: 30px;">
+                                <i class="fas fa-calculator fa-2x" style="margin-bottom: 15px;"></i><br>
+                                <strong>No calculation data available</strong><br>
+                                <span style="font-size: 0.9rem;">Please use the calculator first to view detailed BOQ</span>
                             </td>
                         </tr>
                     </tbody>
                     <tfoot>
                         <tr class="total-row">
-                            <td colspan="3"><strong>SUBTOTAL</strong></td>
-                            <td id="subtotalCost">--</td>
+                            <td colspan="3"><strong>SUBTOTAL (Equipment & Materials)</strong></td>
+                            <td id="subtotalCost" class="cost-value">--</td>
                         </tr>
                         <tr class="total-row">
-                            <td colspan="3"><strong>Installation & Engineering (Est.)</strong></td>
-                            <td id="factorCost">--</td>
+                            <td colspan="3"><strong>Installation & Commissioning</strong></td>
+                            <td id="installationCost" class="cost-value">--</td>
+                        </tr>
+                        <tr class="total-row">
+                            <td colspan="3"><strong>Engineering & Design</strong></td>
+                            <td id="engineeringCost" class="cost-value">--</td>
+                        </tr>
+                        <tr class="total-row">
+                            <td colspan="3"><strong>Taxes & Contingencies (18%)</strong></td>
+                            <td id="taxContingencyCost" class="cost-value">--</td>
                         </tr>
                         <tr class="grand-total-row">
                             <td colspan="3"><strong>GRAND TOTAL ESTIMATE</strong></td>
-                            <td id="grandTotalCost">--</td>
+                            <td id="grandTotalCost" class="cost-value"><strong>--</strong></td>
                         </tr>
                     </tfoot>
                 </table>
 
+                <div class="cost-breakdown">
+                    <h4><i class="fas fa-chart-pie"></i> Cost Breakdown</h4>
+                    <div class="breakdown-grid">
+                        <div class="breakdown-item">
+                            <span class="breakdown-label">FM-200 Agent</span>
+                            <span class="breakdown-value" id="agentCostBreakdown">--</span>
+                        </div>
+                        <div class="breakdown-item">
+                            <span class="breakdown-label">Cylinders & Valves</span>
+                            <span class="breakdown-value" id="cylinderCostBreakdown">--</span>
+                        </div>
+                        <div class="breakdown-item">
+                            <span class="breakdown-label">Detection System</span>
+                            <span class="breakdown-value" id="detectionCostBreakdown">--</span>
+                        </div>
+                        <div class="breakdown-item">
+                            <span class="breakdown-label">Piping & Nozzles</span>
+                            <span class="breakdown-value" id="pipingCostBreakdown">--</span>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="action-section boq-actions">
-                    <button id="exportBOQ" class="btn btn-secondary"><i class="fas fa-file-csv"></i> Export BOQ (CSV)</button>
-                    <p class="cost-note">Note: Total cost is an estimate and includes an installation factor (<span id="installFactor">28%</span>) and an engineering factor (<span id="engineerFactor">15%</span>).</p>
+                    <button id="copyBOQ" class="btn btn-secondary"><i class="fas fa-copy"></i> Copy BOQ</button>
+                    <button id="emailBOQ" class="btn btn-info"><i class="fas fa-envelope"></i> Email Results</button>
+                    <p class="cost-note">
+                        <i class="fas fa-info-circle"></i> 
+                        Note: This is a preliminary estimate. Final costs may vary based on site conditions, brand selection, and market rates.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <div class="cylinder-visual-section">
+            <h3><i class="fas fa-project-diagram"></i> System Configuration Visualization</h3>
+            <div class="cylinder-visual">
+                <div class="cylinder-cards-container" id="cylinderVisualContainer">
+                    <!-- Cylinder cards will be dynamically generated -->
                 </div>
             </div>
         </div>
 
         <div class="disclaimer-section">
             <i class="fas fa-tools"></i>
-            <span><strong>Always consult with certified professionals.</strong> The BOQ provided here is for budgetary purposes only and may exclude local taxes, shipping, and specific site conditions.</span>
+            <span><strong>Important:</strong> This BOQ is for budgetary purposes only. Always consult with certified fire protection engineers for final design. Prices exclude transportation, local taxes, and specific site requirements.</span>
         </div>
     </main>
 
@@ -215,10 +270,24 @@
                     <a href="https://www.amjathkhan.com/" target="_blank"><i class="fas fa-globe"></i> Website</a>
                     <a href="mailto:contact@amjathkhan.com"><i class="fas fa-envelope"></i> Email</a>
                     <a href="#" id="feedbackBtn"><i class="fas fa-comment"></i> Feedback</a>
+                    <a href="blog.html"><i class="fas fa-blog"></i> Blog</a>
+                    <a href="privacy.html"><i class="fas fa-shield-alt"></i> Privacy</a>
+                    <a href="terms.html"><i class="fas fa-file-contract"></i> Terms</a>
+                    <a href="affiliate.html"><i class="fas fa-handshake"></i> Affiliate</a>
                 </div>
+                
+                <div class="social-links">
+                    <a href="https://www.facebook.com/Amjathkhan.s" target="_blank" title="Facebook"><i class="fab fa-facebook"></i></a>
+                    <a href="https://www.instagram.com/amjathkhan_official/#" target="_blank" title="Instagram"><i class="fab fa-instagram"></i></a>
+                    <a href="https://x.com/amjikhan" target="_blank" title="Twitter/X"><i class="fab fa-twitter"></i></a>
+                    <a href="https://www.linkedin.com/in/amjathkhan-shiekusman/" target="_blank" title="LinkedIn"><i class="fab fa-linkedin"></i></a>
+                    <a href="https://bsky.app/profile/amjathkhan.bsky.social" target="_blank" title="Bluesky"><i class="fas fa-cloud"></i></a>
+                </div>
+                
                 <div class="contact-info">
                     <i class="fas fa-envelope"></i> contact@amjathkhan.com<br>
-                    <i class="fas fa-phone"></i> +91-9750816163
+                    <i class="fas fa-phone"></i> +91-9750816163<br>
+                    <i class="fas fa-globe"></i> https://www.amjathkhan.com/
                 </div>
             </div>
             
@@ -232,22 +301,279 @@
         </div>
     </footer>
 
-    <!-- Simple Feedback Modal Script -->
+    <!-- Results Page Specific CSS -->
+    <style>
+        .currency-display {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--tertiary);
+            font-weight: 600;
+            font-size: 0.9rem;
+            padding: 8px 15px;
+            background: rgba(52, 191, 73, 0.1);
+            border-radius: 20px;
+        }
+        
+        .cost-value {
+            font-weight: 600;
+            color: var(--primary);
+        }
+        
+        .cost-breakdown {
+            margin-top: 30px;
+            padding: 20px;
+            background: var(--light);
+            border-radius: var(--border-radius);
+            border-left: 4px solid var(--secondary);
+        }
+        
+        .dark-mode .cost-breakdown {
+            background: #333;
+        }
+        
+        .cost-breakdown h4 {
+            color: var(--secondary);
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .breakdown-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+        
+        .breakdown-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            background: white;
+            border-radius: 5px;
+            border: 1px solid var(--gray-light);
+        }
+        
+        .dark-mode .breakdown-item {
+            background: #444;
+        }
+        
+        .breakdown-label {
+            font-size: 0.9rem;
+            color: var(--gray);
+        }
+        
+        .breakdown-value {
+            font-weight: 600;
+            color: var(--primary);
+        }
+        
+        .cylinder-visual-section {
+            margin-top: 40px;
+            padding: 25px;
+            background: var(--light);
+            border-radius: var(--border-radius);
+        }
+        
+        .dark-mode .cylinder-visual-section {
+            background: #333;
+        }
+        
+        .cylinder-visual-section h3 {
+            color: var(--primary);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .cylinder-visual {
+            padding: 20px;
+            background: white;
+            border-radius: var(--border-radius);
+        }
+        
+        .dark-mode .cylinder-visual {
+            background: #444;
+        }
+        
+        .cylinder-card {
+            background: white;
+            border: 2px solid var(--gray-light);
+            border-radius: var(--border-radius);
+            padding: 20px;
+            width: 200px;
+            text-align: center;
+            transition: var(--transition);
+            position: relative;
+        }
+        
+        .dark-mode .cylinder-card {
+            background: #2d2d2d;
+        }
+        
+        .cylinder-card:hover {
+            border-color: var(--primary);
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(255, 76, 76, 0.2);
+        }
+        
+        .cylinder-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60px;
+            height: 20px;
+            background: var(--primary);
+            border-radius: 10px 10px 0 0;
+        }
+        
+        .cylinder-card::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80px;
+            height: 10px;
+            background: var(--gray);
+            border-radius: 0 0 5px 5px;
+        }
+        
+        .cylinder-content {
+            padding-top: 30px;
+        }
+        
+        .cylinder-label {
+            font-weight: 600;
+            color: var(--dark);
+            font-size: 0.9rem;
+        }
+        
+        .dark-mode .cylinder-label {
+            color: white;
+        }
+        
+        .cylinder-value {
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: var(--secondary);
+            margin: 10px 0;
+        }
+        
+        .cylinder-subtitle {
+            font-size: 0.8rem;
+            color: var(--gray);
+        }
+        
+        .exchange-rate {
+            text-align: center;
+            margin: 15px 0 25px;
+            font-weight: 500;
+            color: var(--gray);
+            padding: 12px;
+            border: 1px dashed var(--secondary);
+            border-radius: 5px;
+            background: rgba(0, 153, 229, 0.05);
+        }
+        
+        @media (max-width: 768px) {
+            .cost-breakdown {
+                padding: 15px;
+            }
+            
+            .breakdown-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .cylinder-visual-section {
+                padding: 20px;
+            }
+            
+            .cylinder-card {
+                width: 100%;
+                margin-bottom: 15px;
+            }
+        }
+        
+        .no-print {
+            display: block;
+        }
+        
+        @media print {
+            .no-print {
+                display: none !important;
+            }
+            
+            .main-header,
+            .main-nav,
+            .footer-details,
+            .footer-bottom,
+            .disclaimer-section,
+            .action-section {
+                display: none !important;
+            }
+            
+            body {
+                background: white !important;
+                color: black !important;
+                font-size: 12pt !important;
+            }
+            
+            .panel {
+                box-shadow: none !important;
+                border: 1px solid #000 !important;
+                page-break-inside: avoid;
+                margin-bottom: 20px !important;
+            }
+            
+            .container {
+                max-width: 100% !important;
+                padding: 10px !important;
+            }
+            
+            .results-layout {
+                display: block !important;
+            }
+            
+            h1, h2, h3 {
+                color: black !important;
+            }
+            
+            .cost-value {
+                color: black !important;
+            }
+            
+            .grand-total-row td {
+                background: #f0f0f0 !important;
+                color: black !important;
+            }
+        }
+    </style>
+
+    <!-- Results Page JavaScript -->
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            // Initialize feedback modal
             const feedbackBtn = document.getElementById('feedbackBtn');
             const feedbackModal = document.getElementById('feedbackModal');
-            const closeModal = feedbackModal ? feedbackModal.querySelector('.close-modal') : null;
             
-            if (feedbackBtn && feedbackModal && closeModal) {
+            if (feedbackBtn && feedbackModal) {
                 feedbackBtn.addEventListener('click', function(e) {
                     e.preventDefault();
                     feedbackModal.style.display = 'flex';
                 });
                 
-                closeModal.addEventListener('click', function() {
-                    feedbackModal.style.display = 'none';
-                });
+                const closeModal = feedbackModal.querySelector('.close-modal');
+                if (closeModal) {
+                    closeModal.addEventListener('click', function() {
+                        feedbackModal.style.display = 'none';
+                    });
+                }
                 
                 window.addEventListener('click', function(e) {
                     if (e.target === feedbackModal) {
@@ -259,16 +585,467 @@
                 if (feedbackForm) {
                     feedbackForm.addEventListener('submit', function(e) {
                         e.preventDefault();
-                        alert('Thank you for your feedback!');
+                        alert('Thank you for your feedback! We will get back to you soon.');
                         feedbackForm.reset();
                         feedbackModal.style.display = 'none';
                     });
                 }
             }
+            
+            // Theme toggle functionality
+            const themeToggle = document.getElementById('themeToggle');
+            if (themeToggle) {
+                const currentTheme = localStorage.getItem('fm200-theme') || 'light';
+                if (currentTheme === 'dark') {
+                    document.body.classList.add('dark-mode');
+                    themeToggle.innerHTML = '<i class="fas fa-sun"></i>';
+                }
+                
+                themeToggle.addEventListener('click', function() {
+                    if (document.body.classList.contains('dark-mode')) {
+                        document.body.classList.remove('dark-mode');
+                        themeToggle.innerHTML = '<i class="fas fa-moon"></i>';
+                        localStorage.setItem('fm200-theme', 'light');
+                    } else {
+                        document.body.classList.add('dark-mode');
+                        themeToggle.innerHTML = '<i class="fas fa-sun"></i>';
+                        localStorage.setItem('fm200-theme', 'dark');
+                    }
+                });
+            }
+            
+            // Visitor counter
+            const visitorCountElement = document.getElementById('visitorCount');
+            if (visitorCountElement) {
+                try {
+                    let count = localStorage.getItem('fm200-visitor-count');
+                    if (!count) {
+                        count = Math.floor(Math.random() * 500) + 1500;
+                    } else {
+                        count = parseInt(count) + 1;
+                    }
+                    localStorage.setItem('fm200-visitor-count', count.toString());
+                    visitorCountElement.textContent = count.toLocaleString();
+                } catch (e) {
+                    visitorCountElement.textContent = '1,500+';
+                }
+            }
+            
+            // Initialize results display
+            initializeResultsDisplay();
+            
+            // Event listeners for buttons
+            document.getElementById('printResults')?.addEventListener('click', printResults);
+            document.getElementById('exportCSV')?.addEventListener('click', exportCSV);
+            document.getElementById('copyBOQ')?.addEventListener('click', copyBOQ);
+            document.getElementById('emailBOQ')?.addEventListener('click', emailBOQ);
         });
+        
+        function initializeResultsDisplay() {
+            try {
+                const savedData = sessionStorage.getItem('fm200_calculation_data');
+                if (savedData) {
+                    const data = JSON.parse(savedData);
+                    displayResults(data);
+                    generateBOQ(data);
+                    generateCylinderVisual(data.calculationResults);
+                } else {
+                    // Show message if no data
+                    const boqBody = document.getElementById('boqTableBody');
+                    if (boqBody) {
+                        boqBody.innerHTML = `
+                            <tr>
+                                <td colspan="4" style="text-align: center; padding: 40px;">
+                                    <i class="fas fa-calculator fa-3x" style="color: var(--primary); margin-bottom: 20px;"></i>
+                                    <h4 style="color: var(--primary); margin-bottom: 10px;">No Calculation Data Found</h4>
+                                    <p style="color: var(--gray); margin-bottom: 20px;">Please use the calculator to generate results first.</p>
+                                    <a href="index.html" class="btn btn-primary" style="text-decoration: none;">
+                                        <i class="fas fa-calculator"></i> Go to Calculator
+                                    </a>
+                                </td>
+                            </tr>
+                        `;
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading results:', error);
+            }
+        }
+        
+        function displayResults(data) {
+            // Update summary information
+            document.getElementById('displayProjectName').textContent = data.formData.projectName || 'Unnamed Project';
+            document.getElementById('agentMassResult').textContent = `${data.calculationResults.agentWeight} kg`;
+            document.getElementById('cylinderCountResult').textContent = `${data.calculationResults.cylinderCount} x ${data.calculationResults.cylinderSize} kg cylinders`;
+            document.getElementById('roomVolumeResult').textContent = `${data.calculationResults.netVolume} m³`;
+            document.getElementById('designTempResult').textContent = `${data.calculationResults.designTemperature} °C`;
+            document.getElementById('altitudeResult').textContent = `${data.calculationResults.altitude} m`;
+            document.getElementById('concentrationResult').textContent = `${data.calculationResults.concentration}%`;
+            document.getElementById('specificVolumeResult').textContent = `${data.calculationResults.specificVaporVolume} m³/kg`;
+            document.getElementById('nozzleCoverageResult').textContent = `${data.calculationResults.floorArea} m²`;
+            document.getElementById('nozzleCountResult').textContent = data.calculationResults.nozzleCount;
+            document.getElementById('pipingLengthResult').textContent = `${data.calculationResults.pipingLength} m`;
+        }
+        
+        function generateBOQ(data) {
+            const costData = calculateCosts(data.calculationResults);
+            const boqBody = document.getElementById('boqTableBody');
+            
+            if (!boqBody) return;
+            
+            // Clear existing content
+            boqBody.innerHTML = '';
+            
+            // Add BOQ items
+            const items = [
+                {
+                    description: 'FM-200 Clean Agent',
+                    quantity: data.calculationResults.agentWeight,
+                    unit: 'kg',
+                    unitPrice: 4000,
+                    total: data.calculationResults.agentWeight * 4000
+                },
+                {
+                    description: 'Storage Cylinders (54.4 kg)',
+                    quantity: data.calculationResults.cylinderCount,
+                    unit: 'nos',
+                    unitPrice: 90000,
+                    total: data.calculationResults.cylinderCount * 90000
+                },
+                {
+                    description: 'Cylinder Valve Assemblies',
+                    quantity: data.calculationResults.cylinderCount,
+                    unit: 'nos',
+                    unitPrice: 25000,
+                    total: data.calculationResults.cylinderCount * 25000
+                },
+                {
+                    description: 'Nozzles (Standard Coverage)',
+                    quantity: data.calculationResults.nozzleCount,
+                    unit: 'nos',
+                    unitPrice: 8000,
+                    total: data.calculationResults.nozzleCount * 8000
+                },
+                {
+                    description: 'Piping System (Sch 40)',
+                    quantity: data.calculationResults.pipingLength,
+                    unit: 'm',
+                    unitPrice: 1200,
+                    total: data.calculationResults.pipingLength * 1200
+                },
+                {
+                    description: 'Fittings & Accessories',
+                    quantity: 1,
+                    unit: 'lot',
+                    unitPrice: 15000,
+                    total: 15000
+                },
+                {
+                    description: 'Detection & Control Panel',
+                    quantity: 1,
+                    unit: 'nos',
+                    unitPrice: 120000,
+                    total: 120000
+                },
+                {
+                    description: 'Smoke Detectors',
+                    quantity: Math.max(2, Math.ceil(data.calculationResults.floorArea / 100)),
+                    unit: 'nos',
+                    unitPrice: 4500,
+                    total: Math.max(2, Math.ceil(data.calculationResults.floorArea / 100)) * 4500
+                },
+                {
+                    description: 'Heat Detectors',
+                    quantity: 2,
+                    unit: 'nos',
+                    unitPrice: 3800,
+                    total: 7600
+                },
+                {
+                    description: 'Manual Call Points',
+                    quantity: 2,
+                    unit: 'nos',
+                    unitPrice: 2500,
+                    total: 5000
+                }
+            ];
+            
+            let subtotal = 0;
+            
+            items.forEach(item => {
+                subtotal += item.total;
+                
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${item.description}</td>
+                    <td>${item.quantity} ${item.unit}</td>
+                    <td>₹ ${item.unitPrice.toLocaleString('en-IN')}</td>
+                    <td>₹ ${item.total.toLocaleString('en-IN')}</td>
+                `;
+                boqBody.appendChild(row);
+            });
+            
+            // Calculate additional costs
+            const installationCost = subtotal * 0.28; // 28% installation
+            const engineeringCost = subtotal * 0.15; // 15% engineering
+            const taxContingency = subtotal * 0.18; // 18% tax & contingency
+            const grandTotal = subtotal + installationCost + engineeringCost + taxContingency;
+            
+            // Update cost display
+            document.getElementById('subtotalCost').textContent = `₹ ${subtotal.toLocaleString('en-IN')}`;
+            document.getElementById('installationCost').textContent = `₹ ${installationCost.toLocaleString('en-IN')}`;
+            document.getElementById('engineeringCost').textContent = `₹ ${engineeringCost.toLocaleString('en-IN')}`;
+            document.getElementById('taxContingencyCost').textContent = `₹ ${taxContingency.toLocaleString('en-IN')}`;
+            document.getElementById('grandTotalCost').textContent = `₹ ${grandTotal.toLocaleString('en-IN')}`;
+            
+            // Update cost breakdown
+            document.getElementById('agentCostBreakdown').textContent = `₹ ${(data.calculationResults.agentWeight * 4000).toLocaleString('en-IN')}`;
+            document.getElementById('cylinderCostBreakdown').textContent = `₹ ${(data.calculationResults.cylinderCount * 115000).toLocaleString('en-IN')}`;
+            document.getElementById('detectionCostBreakdown').textContent = `₹ ${(120000 + (Math.max(2, Math.ceil(data.calculationResults.floorArea / 100)) * 4500) + 7600 + 5000).toLocaleString('en-IN')}`;
+            document.getElementById('pipingCostBreakdown').textContent = `₹ ${((data.calculationResults.nozzleCount * 8000) + (data.calculationResults.pipingLength * 1200) + 15000).toLocaleString('en-IN')}`;
+        }
+        
+        function calculateCosts(calcData) {
+            // This is a simplified cost calculation
+            // In a real application, this would be more detailed
+            const baseCosts = {
+                agentPerKg: 4000,
+                cylinder: 90000,
+                nozzle: 8000,
+                pipingPerMeter: 1200,
+                detectionPanel: 120000,
+                smokeDetector: 4500,
+                installationFactor: 0.28,
+                engineeringFactor: 0.15,
+                contingencyFactor: 0.18
+            };
+            
+            const agentCost = calcData.agentWeight * baseCosts.agentPerKg;
+            const cylinderCost = calcData.cylinderCount * baseCosts.cylinder;
+            const nozzleCost = calcData.nozzleCount * baseCosts.nozzle;
+            const pipingCost = calcData.pipingLength * baseCosts.pipingPerMeter;
+            
+            const equipmentSubtotal = agentCost + cylinderCost + nozzleCost + pipingCost + baseCosts.detectionPanel;
+            const installation = equipmentSubtotal * baseCosts.installationFactor;
+            const engineering = equipmentSubtotal * baseCosts.engineeringFactor;
+            const contingency = equipmentSubtotal * baseCosts.contingencyFactor;
+            
+            return {
+                equipmentSubtotal,
+                installation,
+                engineering,
+                contingency,
+                grandTotal: equipmentSubtotal + installation + engineering + contingency
+            };
+        }
+        
+        function generateCylinderVisual(calcData) {
+            const container = document.getElementById('cylinderVisualContainer');
+            if (!container) return;
+            
+            container.innerHTML = '';
+            
+            // Create cylinder cards
+            const cylinderTypes = [
+                {
+                    label: 'Total Cylinders',
+                    value: calcData.cylinderCount,
+                    subtitle: '54.4 kg cylinders',
+                    color: 'var(--primary)'
+                },
+                {
+                    label: 'Agent Weight',
+                    value: `${calcData.agentWeight.toFixed(0)} kg`,
+                    subtitle: 'FM-200 Clean Agent',
+                    color: 'var(--secondary)'
+                },
+                {
+                    label: 'System Coverage',
+                    value: `${calcData.netVolume.toFixed(0)} m³`,
+                    subtitle: 'Protected Volume',
+                    color: 'var(--tertiary)'
+                },
+                {
+                    label: 'Nozzles Required',
+                    value: calcData.nozzleCount,
+                    subtitle: 'For uniform distribution',
+                    color: 'var(--warning)'
+                }
+            ];
+            
+            cylinderTypes.forEach(type => {
+                const card = document.createElement('div');
+                card.className = 'cylinder-card';
+                card.style.borderTopColor = type.color;
+                
+                card.innerHTML = `
+                    <div class="cylinder-content">
+                        <div class="cylinder-label">${type.label}</div>
+                        <div class="cylinder-value">${type.value}</div>
+                        <div class="cylinder-subtitle">${type.subtitle}</div>
+                    </div>
+                `;
+                
+                container.appendChild(card);
+            });
+        }
+        
+        function printResults() {
+            window.print();
+        }
+        
+        function exportCSV() {
+            try {
+                const savedData = sessionStorage.getItem('fm200_calculation_data');
+                if (!savedData) {
+                    alert('No data to export. Please generate calculations first.');
+                    return;
+                }
+                
+                const data = JSON.parse(savedData);
+                const calc = data.calculationResults;
+                const costs = calculateCosts(calc);
+                
+                let csvContent = "data:text/csv;charset=utf-8,";
+                csvContent += "FM-200 Calculation Results\n";
+                csvContent += `Project: ${data.formData.projectName || 'Unnamed Project'}\n`;
+                csvContent += `Date: ${new Date().toLocaleDateString()}\n\n`;
+                
+                csvContent += "Calculation Parameters\n";
+                csvContent += `Room Volume,${calc.netVolume} m³\n`;
+                csvContent += `Design Temperature,${calc.designTemperature} °C\n`;
+                csvContent += `Design Concentration,${calc.concentration}%\n`;
+                csvContent += `Altitude,${calc.altitude} m\n\n`;
+                
+                csvContent += "System Requirements\n";
+                csvContent += `FM-200 Agent Required,${calc.agentWeight} kg\n`;
+                csvContent += `Cylinders Required,${calc.cylinderCount}\n`;
+                csvContent += `Nozzles Required,${calc.nozzleCount}\n`;
+                csvContent += `Piping Length,${calc.pipingLength} m\n\n`;
+                
+                csvContent += "Cost Estimate (INR)\n";
+                csvContent += `Equipment Subtotal,${costs.equipmentSubtotal.toLocaleString('en-IN')}\n`;
+                csvContent += `Installation (28%),${costs.installation.toLocaleString('en-IN')}\n`;
+                csvContent += `Engineering (15%),${costs.engineering.toLocaleString('en-IN')}\n`;
+                csvContent += `Contingency (18%),${costs.contingency.toLocaleString('en-IN')}\n`;
+                csvContent += `GRAND TOTAL,${costs.grandTotal.toLocaleString('en-IN')}\n`;
+                
+                const encodedUri = encodeURI(csvContent);
+                const link = document.createElement("a");
+                link.setAttribute("href", encodedUri);
+                link.setAttribute("download", `FM200_Results_${data.formData.projectName || 'Project'}_${new Date().toISOString().slice(0,10)}.csv`);
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                
+                alert('Results exported as CSV file successfully!');
+            } catch (error) {
+                console.error('Export error:', error);
+                alert('Error exporting data. Please try again.');
+            }
+        }
+        
+        function copyBOQ() {
+            try {
+                const savedData = sessionStorage.getItem('fm200_calculation_data');
+                if (!savedData) {
+                    alert('No data to copy. Please generate calculations first.');
+                    return;
+                }
+                
+                const data = JSON.parse(savedData);
+                const calc = data.calculationResults;
+                const costs = calculateCosts(calc);
+                
+                const textToCopy = `
+FM-200 CALCULATION RESULTS
+==========================
+Project: ${data.formData.projectName || 'Unnamed Project'}
+Date: ${new Date().toLocaleDateString()}
+
+CALCULATION SUMMARY:
+- Room Volume: ${calc.netVolume} m³
+- FM-200 Agent Required: ${calc.agentWeight} kg
+- Cylinders Required: ${calc.cylinderCount} x 54.4 kg
+- Nozzles Required: ${calc.nozzleCount}
+- Piping Length: ${calc.pipingLength} m
+
+COST ESTIMATE (INR):
+- Equipment & Materials: ₹ ${costs.equipmentSubtotal.toLocaleString('en-IN')}
+- Installation (28%): ₹ ${costs.installation.toLocaleString('en-IN')}
+- Engineering (15%): ₹ ${costs.engineering.toLocaleString('en-IN')}
+- Tax & Contingency (18%): ₹ ${costs.contingency.toLocaleString('en-IN')}
+- GRAND TOTAL: ₹ ${costs.grandTotal.toLocaleString('en-IN')}
+
+Note: This is a preliminary estimate. Consult with certified professionals for final design.
+
+Generated by FM-200 Calculator
+https://fm-200-room-flooding-system-calcula.vercel.app/
+                `.trim();
+                
+                navigator.clipboard.writeText(textToCopy).then(() => {
+                    alert('BOQ copied to clipboard successfully!');
+                }).catch(err => {
+                    console.error('Copy failed:', err);
+                    alert('Could not copy to clipboard. Please try again.');
+                });
+            } catch (error) {
+                console.error('Copy error:', error);
+                alert('Error copying data. Please try again.');
+            }
+        }
+        
+        function emailBOQ() {
+            try {
+                const savedData = sessionStorage.getItem('fm200_calculation_data');
+                if (!savedData) {
+                    alert('No data to email. Please generate calculations first.');
+                    return;
+                }
+                
+                const data = JSON.parse(savedData);
+                const calc = data.calculationResults;
+                const costs = calculateCosts(calc);
+                
+                const subject = encodeURIComponent(`FM-200 Calculation Results - ${data.formData.projectName || 'Project'}`);
+                const body = encodeURIComponent(`
+FM-200 CALCULATION RESULTS
+
+Project: ${data.formData.projectName || 'Unnamed Project'}
+Date: ${new Date().toLocaleDateString()}
+
+CALCULATION PARAMETERS:
+- Room Volume: ${calc.netVolume} m³
+- Design Temperature: ${calc.designTemperature} °C
+- Design Concentration: ${calc.concentration}%
+- Altitude: ${calc.altitude} m
+
+SYSTEM REQUIREMENTS:
+- FM-200 Agent Required: ${calc.agentWeight} kg
+- Cylinders Required: ${calc.cylinderCount} x 54.4 kg
+- Nozzles Required: ${calc.nozzleCount}
+- Piping Length: ${calc.pipingLength} m
+
+COST ESTIMATE (INR):
+- Equipment & Materials: ₹ ${costs.equipmentSubtotal.toLocaleString('en-IN')}
+- Installation (28%): ₹ ${costs.installation.toLocaleString('en-IN')}
+- Engineering (15%): ₹ ${costs.engineering.toLocaleString('en-IN')}
+- Tax & Contingency (18%): ₹ ${costs.contingency.toLocaleString('en-IN')}
+- GRAND TOTAL: ₹ ${costs.grandTotal.toLocaleString('en-IN')}
+
+This is a preliminary estimate generated by FM-200 Calculator.
+Please consult with certified fire protection engineers for final design.
+
+Generated by: https://fm-200-room-flooding-system-calcula.vercel.app/
+                `.trim());
+                
+                const mailtoLink = `mailto:?subject=${subject}&body=${body}`;
+                window.location.href = mailtoLink;
+            } catch (error) {
+                console.error('Email error:', error);
+                alert('Error preparing email. Please try again.');
+            }
+        }
     </script>
-    
-    <!-- MAIN APPLICATION SCRIPT -->
-    <script src="script.js"></script>
 </body>
 </html>
