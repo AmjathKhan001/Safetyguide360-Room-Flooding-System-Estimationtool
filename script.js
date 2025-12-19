@@ -1,5 +1,6 @@
 // FM-200 Calculator - Complete Application Logic
 // Version 4.0 - Professional Edition with Print Functionality
+// UPDATED: Added fallback data to handle missing data.json
 
 // ============================================================================
 // CONFIGURATION & CONSTANTS
@@ -39,36 +40,73 @@ const APP_CONFIG = {
 // ============================================================================
 
 let EXTERNAL_DATA = {};
-let COST_MULTIPLIERS = {};
-let EXCHANGE_RATES = {};
+
+// DEFAULT DATA - Used if data.json is missing
+const DEFAULT_DATA = {
+    exchangeRates: {
+        "USD": 1.00,
+        "EUR": 0.92,
+        "INR": 83.50,
+        "AED": 3.67,
+        "GBP": 0.79,
+        "CAD": 1.36,
+        "AUD": 1.52
+    },
+    costMultipliers: {
+        "agentCostPerKg": 48.50,
+        "cylinderCost": 1250.00,
+        "nozzleCost": 175.00,
+        "pipingCostPerMeter": 45.00,
+        "fittingsCost": 320.00,
+        "valveAssembly": 450.00,
+        "mountingHardware": 85.00,
+        "detectionPanel": 2200.00,
+        "smokeDetector": 95.00,
+        "heatDetector": 85.00,
+        "manualCallPoint": 65.00,
+        "hooterStrobe": 75.00,
+        "warningSigns": 45.00,
+        "installationLaborPerHour": 85.00,
+        "engineeringDesign": 2500.00,
+        "commissioningTesting": 1800.00,
+        "documentation": 450.00,
+        "installationFactor": 1.28,
+        "engineeringFactor": 1.15,
+        "contingencyFactor": 1.10
+    }
+};
+
+let COST_MULTIPLIERS = DEFAULT_DATA.costMultipliers;
+let EXCHANGE_RATES = DEFAULT_DATA.exchangeRates;
 
 /**
- * Loads configuration data from the external data.json file.
+ * Loads configuration data from the external data.json file with fallback to defaults.
  */
 function loadExternalData() {
     console.log('Loading external configuration from data.json...');
     
-    const xhr = new XMLHttpRequest();
+    // Try to load data.json, but use defaults if it fails
     try {
+        const xhr = new XMLHttpRequest();
         xhr.open('GET', 'data.json', false);
         xhr.send(null);
-    
+        
         if (xhr.status === 200) {
             EXTERNAL_DATA = JSON.parse(xhr.responseText);
-            COST_MULTIPLIERS = EXTERNAL_DATA.costMultipliers || {};
-            EXCHANGE_RATES = EXTERNAL_DATA.exchangeRates || {};
+            COST_MULTIPLIERS = EXTERNAL_DATA.costMultipliers || DEFAULT_DATA.costMultipliers;
+            EXCHANGE_RATES = EXTERNAL_DATA.exchangeRates || DEFAULT_DATA.exchangeRates;
             console.log('External data loaded successfully.');
         } else {
-            console.error('Failed to load data.json. Status:', xhr.status);
-            COST_MULTIPLIERS = { agentCostPerKg: 48.50, cylinderCost: 1250.00, valveAssembly: 450.00, installationFactor: 1.28, engineeringFactor: 1.15, contingencyFactor: 1.10 };
-            EXCHANGE_RATES = { USD: 1.00 };
+            console.warn('Failed to load data.json. Status:', xhr.status, 'Using default values.');
+            COST_MULTIPLIERS = DEFAULT_DATA.costMultipliers;
+            EXCHANGE_RATES = DEFAULT_DATA.exchangeRates;
         }
     } catch (e) {
-        console.error('Network or parsing error during data load:', e);
+        console.warn('Error loading data.json:', e.message, 'Using default values.');
+        COST_MULTIPLIERS = DEFAULT_DATA.costMultipliers;
+        EXCHANGE_RATES = DEFAULT_DATA.exchangeRates;
     }
 }
-
-loadExternalData();
 
 // OEM Suppliers Database
 const OEM_SUPPLIERS = [
@@ -131,6 +169,10 @@ class FM200Calculator {
         this.currentData = null;
         this.costChart = null;
         this.userPrefs = this.loadPreferences();
+        
+        // Load external data first
+        loadExternalData();
+        
         this.initializeApp();
     }
 
@@ -139,6 +181,18 @@ class FM200Calculator {
     // ============================================================================
 
     initializeApp() {
+        // Hide loading screen
+        setTimeout(() => {
+            const loadingScreen = document.getElementById('loadingScreen');
+            if (loadingScreen) {
+                loadingScreen.style.opacity = '0';
+                setTimeout(() => {
+                    loadingScreen.style.display = 'none';
+                }, 500);
+            }
+        }, 500);
+
+        // Error handling
         window.onerror = (msg, url, line, col, error) => {
             console.error(`Application Error: ${msg} at ${url}:${line}:${col}`);
             this.showNotification(`Application Error: ${msg}`, 'error');
@@ -160,6 +214,9 @@ class FM200Calculator {
         this.initGoogleTranslate();
         this.initAffiliateLinks();
         this.initBuyMeCoffee();
+        
+        // Initialize visitor counter
+        this.updateVisitorCounter();
     }
 
     // ============================================================================
@@ -220,8 +277,55 @@ class FM200Calculator {
 
         // Initialize quick preview
         this.updateQuickPreview();
+        
+        // Initialize accordion
+        this.initAccordion();
 
         console.log('Calculator Page Initialized Successfully');
+    }
+
+    initAccordion() {
+        const accordionHeaders = document.querySelectorAll('.accordion-header');
+        accordionHeaders.forEach(header => {
+            header.addEventListener('click', () => {
+                const item = header.parentElement;
+                const content = header.nextElementSibling;
+                
+                // Toggle active class
+                item.classList.toggle('active');
+                
+                // Toggle content visibility
+                if (item.classList.contains('active')) {
+                    content.style.maxHeight = content.scrollHeight + 'px';
+                    content.style.padding = '15px';
+                } else {
+                    content.style.maxHeight = '0';
+                    content.style.padding = '0 15px';
+                }
+            });
+        });
+    }
+
+    updateVisitorCounter() {
+        const counterElement = document.getElementById('visitorCount');
+        if (!counterElement) return;
+        
+        try {
+            let visitorCount = localStorage.getItem('fm200VisitorCount');
+            
+            if (!visitorCount) {
+                visitorCount = Math.floor(Math.random() * 500) + 1500;
+            } else {
+                visitorCount = parseInt(visitorCount);
+            }
+            
+            visitorCount += 1;
+            localStorage.setItem('fm200VisitorCount', visitorCount.toString());
+            counterElement.textContent = visitorCount.toLocaleString();
+        } catch (e) {
+            console.warn('Could not update visitor counter:', e);
+            counterElement.textContent = '1,500+';
+        }
     }
 
     setDefaultValues() {
@@ -262,11 +366,12 @@ class FM200Calculator {
                 };
             }
             
-            window.onclick = (event) => {
-                if (event.target === modal) {
+            // Close when clicking outside
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
                     modal.style.display = 'none';
                 }
-            };
+            });
         }
     }
 
@@ -275,15 +380,19 @@ class FM200Calculator {
         const formData = this.collectFormData();
         
         if (formData) {
-            const savedCalculations = JSON.parse(localStorage.getItem('fm200SavedCalculations') || '[]');
-            savedCalculations.push({
-                name: saveName,
-                data: formData,
-                timestamp: new Date().toISOString()
-            });
-            
-            localStorage.setItem('fm200SavedCalculations', JSON.stringify(savedCalculations));
-            this.showNotification('Calculation saved successfully!', 'success');
+            try {
+                const savedCalculations = JSON.parse(localStorage.getItem('fm200SavedCalculations') || '[]');
+                savedCalculations.push({
+                    name: saveName,
+                    data: formData,
+                    timestamp: new Date().toISOString()
+                });
+                
+                localStorage.setItem('fm200SavedCalculations', JSON.stringify(savedCalculations));
+                this.showNotification('Calculation saved successfully!', 'success');
+            } catch (e) {
+                this.showNotification('Error saving calculation: ' + e.message, 'error');
+            }
         }
     }
 
@@ -299,7 +408,7 @@ class FM200Calculator {
             const volume = length * width * height;
             
             // Calculate specific volume (simplified formula)
-            const specificVolume = 0.1269 + (0.0005 * temp);
+            const specificVolume = APP_CONFIG.SPECIFIC_VAPOR_BASE + (APP_CONFIG.SPECIFIC_VAPOR_TEMP_FACTOR * temp);
             
             // Calculate agent mass (simplified for preview)
             const agentMass = (volume / specificVolume) * (concentration / (100 - concentration));
@@ -468,19 +577,27 @@ class FM200Calculator {
     }
 
     loadCalculationData() {
-        const dataJson = sessionStorage.getItem(APP_CONFIG.storageKeys.BUDGET_DATA);
-        if (dataJson) {
-            this.currentData = JSON.parse(dataJson);
-            console.log('Calculation data loaded from session storage.');
-            
-            // Calculate costs with default currency (USD)
-            const costResults = this.calculateSystemCosts(this.currentData.calculationResults, 'USD');
-            this.currentData.costResults = costResults;
-        } else {
-            this.showNotification('No previous calculation found. Please use the calculator page first.', 'warning');
-            setTimeout(() => {
-                window.location.href = 'index.html';
-            }, 3000);
+        try {
+            const dataJson = sessionStorage.getItem(APP_CONFIG.storageKeys.BUDGET_DATA);
+            if (dataJson) {
+                this.currentData = JSON.parse(dataJson);
+                console.log('Calculation data loaded from session storage.');
+                
+                // Calculate costs with default currency (USD)
+                const costResults = this.calculateSystemCosts(this.currentData.calculationResults, 'USD');
+                this.currentData.costResults = costResults;
+                
+                // Update BOQ table
+                setTimeout(() => this.renderBOQTable(), 100);
+            } else {
+                this.showNotification('No previous calculation found. Please use the calculator page first.', 'warning');
+                setTimeout(() => {
+                    window.location.href = 'index.html';
+                }, 3000);
+            }
+        } catch (e) {
+            console.error('Error loading calculation data:', e);
+            this.showNotification('Error loading calculation data. Please recalculate.', 'error');
         }
     }
 
@@ -576,7 +693,7 @@ class FM200Calculator {
             documentation: this.round(m.documentation, 2),
 
             equipmentSubtotal: this.round(equipmentSubtotal, 2),
-            laborSubtotal: this.round(installationLabor + m.engineeringDesign + m.commissioningTesting + m.documentation, 2),
+            laborSubtotal: this.round(laborSubtotal, 2),
             installationFactorCost: this.round(installationCost, 2),
             engineeringFactorCost: this.round(engineeringCost, 2),
             contingency: this.round(contingency, 2),
@@ -609,6 +726,9 @@ class FM200Calculator {
                 this.updateResultsCurrency(e.target.value);
             });
         }
+        
+        // Update exchange rate display
+        this.setElementText('exchangeRateDisplay', '1.0000 USD');
     }
 
     // ============================================================================
@@ -839,17 +959,53 @@ class FM200Calculator {
         
         if (!boqBody) return;
         
+        // Clear existing content
         boqBody.innerHTML = '';
         
         // Define BOQ items
         const boqItems = [
-            { item: 'FM-200 Agent', qty: this.currentData.calculationResults.agentWeight, unit: 'kg', unitPrice: costResults.agentCost / this.currentData.calculationResults.agentWeight },
-            { item: 'Storage Cylinders', qty: this.currentData.calculationResults.cylinderCount, unit: 'pcs', unitPrice: costResults.cylinderCost / this.currentData.calculationResults.cylinderCount },
-            { item: 'Nozzles', qty: this.currentData.calculationResults.nozzleCount, unit: 'pcs', unitPrice: costResults.nozzleCost / this.currentData.calculationResults.nozzleCount },
-            { item: 'Piping', qty: this.currentData.calculationResults.pipingLength, unit: 'm', unitPrice: costResults.pipingCost / this.currentData.calculationResults.pipingLength },
-            { item: 'Detection Panel', qty: 1, unit: 'pc', unitPrice: costResults.detectionCost },
-            { item: 'Installation Labor', qty: 1, unit: 'lot', unitPrice: costResults.installationLabor },
-            { item: 'Engineering Design', qty: 1, unit: 'lot', unitPrice: costResults.engineeringDesign }
+            { 
+                item: 'FM-200 Agent', 
+                qty: this.currentData.calculationResults.agentWeight, 
+                unit: 'kg', 
+                unitPrice: costResults.agentCost / this.currentData.calculationResults.agentWeight 
+            },
+            { 
+                item: 'Storage Cylinders', 
+                qty: this.currentData.calculationResults.cylinderCount, 
+                unit: 'pcs', 
+                unitPrice: costResults.cylinderCost / this.currentData.calculationResults.cylinderCount 
+            },
+            { 
+                item: 'Nozzles', 
+                qty: this.currentData.calculationResults.nozzleCount, 
+                unit: 'pcs', 
+                unitPrice: costResults.nozzleCost / this.currentData.calculationResults.nozzleCount 
+            },
+            { 
+                item: 'Piping', 
+                qty: this.currentData.calculationResults.pipingLength, 
+                unit: 'm', 
+                unitPrice: costResults.pipingCost / this.currentData.calculationResults.pipingLength 
+            },
+            { 
+                item: 'Detection Panel', 
+                qty: 1, 
+                unit: 'pc', 
+                unitPrice: costResults.detectionCost 
+            },
+            { 
+                item: 'Installation Labor', 
+                qty: 1, 
+                unit: 'lot', 
+                unitPrice: costResults.installationLabor 
+            },
+            { 
+                item: 'Engineering Design', 
+                qty: 1, 
+                unit: 'lot', 
+                unitPrice: costResults.engineeringDesign 
+            }
         ];
         
         let subtotal = 0;
@@ -875,8 +1031,12 @@ class FM200Calculator {
         this.setElementText('subtotalCost', this.formatCurrency(subtotal * exchangeRate, currency));
         this.setElementText('factorCost', this.formatCurrency(factorTotal * exchangeRate, currency));
         this.setElementText('grandTotalCost', this.formatCurrency(grandTotal * exchangeRate, currency));
-        this.setElementText('installFactor', `${(COST_MULTIPLIERS.installationFactor * 100).toFixed(0)}%`);
-        this.setElementText('engineerFactor', `${(COST_MULTIPLIERS.engineeringFactor * 100).toFixed(0)}%`);
+        
+        // Update factor percentages
+        const installPercent = (COST_MULTIPLIERS.installationFactor - 1) * 100;
+        const engineerPercent = (COST_MULTIPLIERS.engineeringFactor - 1) * 100;
+        this.setElementText('installFactor', `${installPercent.toFixed(0)}%`);
+        this.setElementText('engineerFactor', `${engineerPercent.toFixed(0)}%`);
     }
 
     exportBOQToCSV() {
@@ -900,7 +1060,7 @@ class FM200Calculator {
 
         const exportItems = [
             ['FM-200 Agent', calculationResults.agentWeight, 'kg', costResults.agentCost / calculationResults.agentWeight, costResults.agentCost],
-            ['Storage Cylinders', calculationResults.cylinderCount, 'pcs', costResults.cylinderCost / calculationResults.cylinderCount, costResults.cylinderCount],
+            ['Storage Cylinders', calculationResults.cylinderCount, 'pcs', costResults.cylinderCost / calculationResults.cylinderCount, costResults.cylinderCost],
             ['Nozzles', calculationResults.nozzleCount, 'pcs', costResults.nozzleCost / calculationResults.nozzleCount, costResults.nozzleCost],
             ['Piping', calculationResults.pipingLength, 'm', costResults.pipingCost / calculationResults.pipingLength, costResults.pipingCost],
             ['Detection Panel', 1, 'pc', costResults.detectionCost, costResults.detectionCost],
@@ -952,6 +1112,11 @@ class FM200Calculator {
                 this.previewQuotation();
             });
         }
+        
+        // Initialize form with current data if available
+        if (this.currentData) {
+            this.autoFillQuotationForm();
+        }
 
         console.log('Quotation Page Initialized Successfully');
     }
@@ -977,11 +1142,12 @@ class FM200Calculator {
         
         const { formData } = this.currentData;
 
-        const projectName = document.getElementById('projectName');
-        if (projectName) projectName.value = formData.projectName;
+        // Fill client information
+        const clientName = document.getElementById('clientName');
+        if (clientName) clientName.value = formData.projectName;
         
-        const projectLocation = document.getElementById('projectLocation');
-        if (projectLocation) projectLocation.value = formData.clientLocation;
+        const clientAddress = document.getElementById('clientAddress');
+        if (clientAddress) clientAddress.value = formData.clientLocation;
 
         this.showNotification('Quotation form auto-filled with project data', 'success');
     }
@@ -994,8 +1160,13 @@ class FM200Calculator {
             return;
         }
 
+        // Get form values
+        const quotationNumber = document.getElementById('quotationNumber')?.value || 'Q-FM200-2024-001';
+        const quotationDate = document.getElementById('quotationDate')?.value || new Date().toISOString().split('T')[0];
+        const clientName = document.getElementById('clientName')?.value || 'Client Name';
+        
         // Create preview content
-        const previewContent = this.generateQuotationPreview();
+        const previewContent = this.generateQuotationPreview(quotationNumber, quotationDate, clientName);
         
         // Open preview in new window
         const previewWindow = window.open('', '_blank');
@@ -1003,7 +1174,7 @@ class FM200Calculator {
         previewWindow.document.close();
     }
 
-    generateQuotationPreview() {
+    generateQuotationPreview(quotationNumber, quotationDate, clientName) {
         const { formData, calculationResults } = this.currentData;
         const today = new Date().toLocaleDateString();
         
@@ -1034,7 +1205,7 @@ class FM200Calculator {
                     <div class="header">
                         <h1>FM-200 CLEAN AGENT SYSTEM QUOTATION</h1>
                         <h2>${formData.projectName}</h2>
-                        <p>Date: ${today}</p>
+                        <p>Quotation: ${quotationNumber} | Date: ${quotationDate}</p>
                     </div>
                     
                     <div class="details">
@@ -1042,7 +1213,7 @@ class FM200Calculator {
                         <table>
                             <tr>
                                 <td><strong>Client:</strong></td>
-                                <td>${formData.projectName}</td>
+                                <td>${clientName}</td>
                             </tr>
                             <tr>
                                 <td><strong>Location:</strong></td>
@@ -1098,26 +1269,37 @@ class FM200Calculator {
     // ============================================================================
 
     round(value, decimals) {
-        return Number(Math.round(value + 'e' + decimals) + 'e-' + decimals);
+        const factor = Math.pow(10, decimals);
+        return Math.round(value * factor) / factor;
     }
 
     formatCurrency(amount, currency) {
         try {
-            const formatter = new Intl.NumberFormat('en-US', {
-                style: 'currency',
-                currency: currency,
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2,
-            });
-            let formatted = formatter.format(amount);
-
-            if (currency === 'INR') {
-                formatted = '₹' + formatted.replace('₹', '');
-            } else if (currency === 'AED') {
-                formatted = formatted.replace('AED', 'AED ');
+            // Handle different currency symbols
+            let symbol = '';
+            let formattedAmount = amount.toFixed(2);
+            
+            switch(currency) {
+                case 'USD':
+                    symbol = '$';
+                    break;
+                case 'EUR':
+                    symbol = '€';
+                    break;
+                case 'INR':
+                    symbol = '₹';
+                    break;
+                case 'AED':
+                    symbol = 'AED ';
+                    break;
+                default:
+                    symbol = currency + ' ';
             }
             
-            return formatted;
+            // Add thousand separators
+            formattedAmount = formattedAmount.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+            
+            return symbol + formattedAmount;
         } catch (error) {
             return `${currency} ${amount.toFixed(2)}`;
         }
@@ -1137,30 +1319,49 @@ class FM200Calculator {
     }
 
     showNotification(message, type = 'info') {
-        if (window.toastr) {
-            const options = {
-                closeButton: true,
-                progressBar: true,
-                positionClass: 'toast-top-right',
-                timeOut: 5000
-            };
-            switch (type) {
-                case 'success':
-                    toastr.success(message, 'Success', options);
-                    break;
-                case 'error':
-                    toastr.error(message, 'Error', options);
-                    break;
-                case 'warning':
-                    toastr.warning(message, 'Warning', options);
-                    break;
-                default:
-                    toastr.info(message, 'Information', options);
-            }
-        } else {
-            console.log(`[${type.toUpperCase()}] ${message}`);
-            alert(message);
+        console.log(`[${type.toUpperCase()}] ${message}`);
+        
+        // Create notification element
+        const notification = document.createElement('div');
+        notification.className = `notification notification-${type}`;
+        notification.textContent = message;
+        notification.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 20px;
+            border-radius: 5px;
+            color: white;
+            font-weight: bold;
+            z-index: 10000;
+            animation: slideIn 0.3s ease;
+        `;
+        
+        switch(type) {
+            case 'success':
+                notification.style.backgroundColor = '#34bf49';
+                break;
+            case 'error':
+                notification.style.backgroundColor = '#ff4444';
+                break;
+            case 'warning':
+                notification.style.backgroundColor = '#ff9800';
+                break;
+            default:
+                notification.style.backgroundColor = '#0099e5';
         }
+        
+        document.body.appendChild(notification);
+        
+        // Remove after 5 seconds
+        setTimeout(() => {
+            notification.style.animation = 'slideOut 0.3s ease';
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.parentNode.removeChild(notification);
+                }
+            }, 300);
+        }, 5000);
     }
 
     loadPreferences() {
@@ -1188,25 +1389,28 @@ class FM200Calculator {
     initThemeToggle() {
         const toggleBtn = document.getElementById('themeToggle');
         if (toggleBtn) {
-            this.setTheme(this.userPrefs.theme);
+            // Set initial theme
+            if (this.userPrefs.theme === 'dark') {
+                document.body.classList.add('dark-mode');
+                toggleBtn.innerHTML = '<i class="fas fa-sun"></i>';
+            } else {
+                document.body.classList.remove('dark-mode');
+                toggleBtn.innerHTML = '<i class="fas fa-moon"></i>';
+            }
             
+            // Toggle theme
             toggleBtn.addEventListener('click', () => {
-                const newTheme = document.body.classList.contains('dark-mode') ? 'light' : 'dark';
-                this.setTheme(newTheme);
-                this.userPrefs.theme = newTheme;
+                if (document.body.classList.contains('dark-mode')) {
+                    document.body.classList.remove('dark-mode');
+                    toggleBtn.innerHTML = '<i class="fas fa-moon"></i>';
+                    this.userPrefs.theme = 'light';
+                } else {
+                    document.body.classList.add('dark-mode');
+                    toggleBtn.innerHTML = '<i class="fas fa-sun"></i>';
+                    this.userPrefs.theme = 'dark';
+                }
                 this.savePreferences();
             });
-        }
-    }
-
-    setTheme(theme) {
-        const toggleBtn = document.getElementById('themeToggle');
-        if (theme === 'dark') {
-            document.body.classList.add('dark-mode');
-            if (toggleBtn) toggleBtn.innerHTML = '<i class="fas fa-sun"></i>';
-        } else {
-            document.body.classList.remove('dark-mode');
-            if (toggleBtn) toggleBtn.innerHTML = '<i class="fas fa-moon"></i>';
         }
     }
 
@@ -1234,7 +1438,7 @@ class FM200Calculator {
     }
 
     initAffiliateLinks() {
-        const affiliateLinks = document.querySelectorAll('.affiliate-link');
+        const affiliateLinks = document.querySelectorAll('.affiliate-link, .affiliate-button');
         affiliateLinks.forEach(link => {
             link.addEventListener('click', (e) => {
                 console.log('Affiliate link clicked:', link.href);
@@ -1243,13 +1447,13 @@ class FM200Calculator {
     }
 
     initBuyMeCoffee() {
-        const coffeeLinks = document.querySelectorAll('.coffee-link');
+        const coffeeLinks = document.querySelectorAll('.coffee-button');
         coffeeLinks.forEach(link => {
             link.addEventListener('click', (e) => {
                 e.preventDefault();
                 this.showNotification('Thank you for your support!', 'success');
                 setTimeout(() => {
-                    window.open('https://www.buymeacoffee.com/firesafety', '_blank', 'noopener,noreferrer');
+                    window.open(link.href, '_blank', 'noopener,noreferrer');
                 }, 1000);
             });
         });
@@ -1260,21 +1464,76 @@ class FM200Calculator {
 // APPLICATION INITIALIZATION
 // ============================================================================
 
+// Add CSS for notifications
+const notificationStyle = document.createElement('style');
+notificationStyle.textContent = `
+    @keyframes slideIn {
+        from { transform: translateX(100%); opacity: 0; }
+        to { transform: translateX(0); opacity: 1; }
+    }
+    @keyframes slideOut {
+        from { transform: translateX(0); opacity: 1; }
+        to { transform: translateX(100%); opacity: 0; }
+    }
+    
+    .dark-mode {
+        background: #1a1a1a !important;
+        color: #ffffff !important;
+    }
+    .dark-mode .panel {
+        background: #2d2d2d !important;
+        color: #ffffff !important;
+    }
+    .dark-mode input,
+    .dark-mode select,
+    .dark-mode textarea {
+        background: #3d3d3d !important;
+        color: #ffffff !important;
+        border-color: #555 !important;
+    }
+`;
+document.head.appendChild(notificationStyle);
+
+// Initialize when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
     console.log('FM-200 Calculator v4.0 - Initializing...');
     
-    window.fm200Calculator = new FM200Calculator();
-    
-    console.log('FM-200 Calculator v4.0 - Ready!');
+    try {
+        window.fm200Calculator = new FM200Calculator();
+        console.log('FM-200 Calculator v4.0 - Ready!');
+    } catch (error) {
+        console.error('Failed to initialize FM-200 Calculator:', error);
+        
+        // Show error to user
+        const errorDiv = document.createElement('div');
+        errorDiv.style.cssText = `
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: #ff4444;
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            z-index: 10000;
+        `;
+        errorDiv.innerHTML = `
+            <h3>Application Error</h3>
+            <p>${error.message}</p>
+            <button onclick="location.reload()" style="margin-top: 10px; padding: 10px 20px; background: white; color: #ff4444; border: none; border-radius: 5px; cursor: pointer;">
+                Reload Application
+            </button>
+        `;
+        document.body.appendChild(errorDiv);
+    }
 });
 
-window.addEventListener('unhandledrejection', (event) => {
+// Handle unhandled errors
+window.addEventListener('error', function(e) {
+    console.error('Unhandled error:', e.message, 'at', e.filename, ':', e.lineno);
+});
+
+window.addEventListener('unhandledrejection', function(event) {
     console.error('Unhandled Promise Rejection:', event.reason);
-    
-    if (window.fm200Calculator) {
-        window.fm200Calculator.showNotification(
-            `Application Error: ${event.reason.message || 'Unknown error'}`,
-            'error'
-        );
-    }
 });
