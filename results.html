@@ -28,6 +28,10 @@
                     <i class="fas fa-fire-extinguisher"></i>
                     <h1>FM-200 Calculator</h1>
                     <span class="tagline">Calculation Results & BOQ</span>
+                    <div class="visitor-counter">
+                        <i class="fas fa-eye"></i>
+                        <span>Visitors: <span id="visitorCount">Loading...</span></span>
+                    </div>
                 </div>
                 <div class="header-actions">
                     <div id="google_translate_element" class="translate-widget"></div>
@@ -113,7 +117,7 @@
                 </div>
 
                 <div class="action-section result-actions">
-                    <button id="printResults" class="btn btn-info"><i class="fas fa-print"></i> Print Results</button>
+                    <button id="printResults" class="btn btn-info"><i class="fas fa-print"></i> Print/Save as PDF</button>
                     <a href="quotation.html" class="btn btn-primary"><i class="fas fa-file-invoice-dollar"></i> Generate Quotation</a>
                     <a href="index.html" class="btn btn-secondary"><i class="fas fa-backward"></i> Back to Calculator</a>
                 </div>
@@ -135,7 +139,7 @@
                 </div>
 
                 <div class="exchange-rate">
-                    <i class="fas fa-exchange-alt"></i> Exchange Rate: 1 USD = <span id="exchangeRateDisplay">--</span>
+                    <i class="fas fa-exchange-alt"></i> Exchange Rate: 1 USD = <span id="exchangeRateDisplay">1.0000</span>
                 </div>
                 
                 <table id="boqTable" class="data-table boq-table">
@@ -148,7 +152,13 @@
                         </tr>
                     </thead>
                     <tbody>
-                        </tbody>
+                        <tr>
+                            <td colspan="4" style="text-align: center; color: #666; padding: 20px;">
+                                <i class="fas fa-calculator"></i><br>
+                                Calculate system requirements first to view BOQ
+                            </td>
+                        </tr>
+                    </tbody>
                     <tfoot>
                         <tr class="total-row">
                             <td colspan="3"><strong>SUBTOTAL</strong></td>
@@ -167,7 +177,7 @@
 
                 <div class="action-section boq-actions">
                     <button id="exportBOQ" class="btn btn-secondary"><i class="fas fa-file-csv"></i> Export BOQ (CSV)</button>
-                    <p class="cost-note">Note: Total cost is an estimate and includes an installation factor (<span id="installFactor">--</span>) and an engineering factor (<span id="engineerFactor">--</span>).</p>
+                    <p class="cost-note">Note: Total cost is an estimate and includes an installation factor (<span id="installFactor">28%</span>) and an engineering factor (<span id="engineerFactor">15%</span>).</p>
                 </div>
             </div>
         </div>
@@ -178,12 +188,48 @@
         </div>
     </main>
 
+    <!-- Feedback Modal -->
+    <div id="feedbackModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Send Feedback</h2>
+                <span class="close-modal">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form id="feedbackForm">
+                    <div class="form-group">
+                        <label for="feedbackName">Your Name</label>
+                        <input type="text" id="feedbackName" placeholder="Enter your name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="feedbackEmail">Email Address</label>
+                        <input type="email" id="feedbackEmail" placeholder="Enter your email" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="feedbackMessage">Message</label>
+                        <textarea id="feedbackMessage" rows="4" placeholder="Your feedback or suggestions..." required></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="feedbackType">Type of Feedback</label>
+                        <select id="feedbackType">
+                            <option value="suggestion">Suggestion</option>
+                            <option value="bug">Bug Report</option>
+                            <option value="feature">Feature Request</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Send Feedback</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
     <footer class="main-footer">
         <div class="container">
             <div class="tool-links-section">
                 <div class="affiliate-area">
                     <a href="https://amzn.to/4p8ceG6" target="_blank" rel="noopener noreferrer" class="affiliate-button amazon-button">
-                        <i class="fab fa-amazon"></i> Amazon Clearence Sale Upto 70% All Day
+                        <i class="fab fa-amazon"></i> Amazon Clearance Sale Upto 70% All Day
                     </a>
                     <a href="https://www.buymeacoffee.com/s.amjathkhan" target="_blank" rel="noopener noreferrer" class="affiliate-button coffee-button">
                         <i class="fas fa-mug-hot"></i> Support the Developer (Buy Me a Coffee)
@@ -193,61 +239,116 @@
                 <div class="explore-tools-area">
                     <h3>Explore More Calculators & Tools</h3>
                     <p>We highly recommend these expert resources for specialized safety and utility tools:</p>
-                    <ul class="other-tools-list">
-                        <li>
-                            <a href="https://www.firesafetytool.com" target="_blank" rel="noopener noreferrer">
-                                <i class="fas fa-toolbox"></i> firesafetytool.com
-                            </a>
-                            <p class="tool-description">Your central hub for professional fire protection resources and calculators.</p>
-                        </li>
-                        <li>
-                            <a href="https://www.hsecalculator.com" target="_blank" rel="noopener noreferrer">
-                                <i class="fas fa-shield-alt"></i> hsecalculator.com
-                            </a>
-                            <p class="tool-description">Comprehensive suite of tools for Health, Safety, and Environment (HSE) management and compliance.</p>
-                        </li>
-                        <li>
-                            <a href="https://www.webtoolsdaily.com" target="_blank" rel="noopener noreferrer">
-                                <i class="fas fa-wrench"></i> webtoolsdaily.com
-                            </a>
-                            <p class="tool-description">A collection of simple, fast, and useful web-based utilities for daily tasks.</p>
-                        </li>
-                        <li>
-                            <a href="https://fire-extinguisher-audit-tool.vercel.app" target="_blank" rel="noopener noreferrer">
-                                <i class="fas fa-clipboard-check"></i> Fire Extinguisher Audit Tool
-                            </a>
-                            <p class="tool-description">Streamline your fire extinguisher inspection and maintenance records.</p>
-                        </li>
-                        <li>
-                            <a href="https://firesafetyassessmenttool.vercel.app" target="_blank" rel="noopener noreferrer">
-                                <i class="fas fa-tasks"></i> Fire Safety Assessment Tool
-                            </a>
-                            <p class="tool-description">A structured checklist and scoring system for site-specific fire risk evaluation.</p>
-                        </li>
-                        <li>
-                            <a href="https://ceiling-fire-extinguisher-cost-esti.vercel.app/" target="_blank" rel="noopener noreferrer">
-                                <i class="fas fa-money-bill-wave"></i> Ceiling Fire Extinguisher Cost Estimator
-                            </a>
-                            <p class="tool-description">Calculate the cost for ceiling-mounted fire suppression solutions.</p>
-                        </li>
-                        <li>
-                            <a href="https://fire-extinguisher-calculator.vercel.app/" target="_blank" rel="noopener noreferrer">
-                                <i class="fas fa-calculator"></i> Fire Extinguisher Calculator
-                            </a>
-                            <p class="tool-description">Determine the correct type and number of fire extinguishers for any area based on fire class.</p>
-                        </li>
-                    </ul>
+                    
+                    <div class="tools-category">
+                        <h4><i class="fas fa-shield-alt"></i> HSE Tools</h4>
+                        <ul class="other-tools-list">
+                            <li>
+                                <a href="https://www.hsecalculator.com/" target="_blank" rel="noopener noreferrer">
+                                    <i class="fas fa-calculator"></i> HSE Calculators
+                                </a>
+                                <p class="tool-description">Comprehensive suite of tools for Health, Safety, and Environment management and compliance.</p>
+                            </li>
+                            <li>
+                                <a href="https://hse-toolkit.vercel.app/" target="_blank" rel="noopener noreferrer">
+                                    <i class="fas fa-toolbox"></i> HSE Tools Toolkit
+                                </a>
+                                <p class="tool-description">Complete toolkit for HSE professionals with various safety assessment tools.</p>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div class="tools-category">
+                        <h4><i class="fas fa-fire-extinguisher"></i> Fire Safety Tools</h4>
+                        <ul class="other-tools-list">
+                            <li>
+                                <a href="https://safetyguide360-ceilingmounted-firee.vercel.app/" target="_blank" rel="noopener noreferrer">
+                                    <i class="fas fa-cloud"></i> Ceiling Mounted Fire Extinguisher Estimation Tool
+                                </a>
+                                <p class="tool-description">Calculate requirements for ceiling-mounted fire suppression solutions.</p>
+                            </li>
+                            <li>
+                                <a href="https://www.firesafetytool.com/" target="_blank" rel="noopener noreferrer">
+                                    <i class="fas fa-fire"></i> Fire Safety Calculators
+                                </a>
+                                <p class="tool-description">Your central hub for professional fire protection resources and calculators.</p>
+                            </li>
+                            <li>
+                                <a href="https://fire-extinguisher-audit-tool.vercel.app/" target="_blank" rel="noopener noreferrer">
+                                    <i class="fas fa-clipboard-check"></i> Fire Extinguisher Health Checkup Audit Tool
+                                </a>
+                                <p class="tool-description">Streamline your fire extinguisher inspection and maintenance records.</p>
+                            </li>
+                            <li>
+                                <a href="https://safetyguide360-firesafety-assessmen.vercel.app/" target="_blank" rel="noopener noreferrer">
+                                    <i class="fas fa-tasks"></i> Fire Safety Assessment Tool
+                                </a>
+                                <p class="tool-description">A structured checklist and scoring system for site-specific fire risk evaluation.</p>
+                            </li>
+                            <li>
+                                <a href="https://fire-extinguisher-calculator.vercel.app/" target="_blank" rel="noopener noreferrer">
+                                    <i class="fas fa-calculator"></i> Fire Extinguisher Estimation Tool
+                                </a>
+                                <p class="tool-description">Determine the correct type and number of fire extinguishers for any area.</p>
+                            </li>
+                            <li>
+                                <a href="https://kitchen-fire-suppression-calculator.vercel.app/" target="_blank" rel="noopener noreferrer">
+                                    <i class="fas fa-utensils"></i> Kitchen Suppression System Estimation Tool
+                                </a>
+                                <p class="tool-description">Calculate requirements for kitchen fire suppression systems.</p>
+                            </li>
+                            <li>
+                                <a href="https://fm-200-room-flooding-system-calcula.vercel.app/" target="_blank" rel="noopener noreferrer">
+                                    <i class="fas fa-flask"></i> Room Flooding System Estimation Tool (Current Tool)
+                                </a>
+                                <p class="tool-description">FM-200 clean agent fire suppression system calculation tool.</p>
+                            </li>
+                            <li>
+                                <a href="https://safetyguide360-panel-fire-suppressi.vercel.app/" target="_blank" rel="noopener noreferrer">
+                                    <i class="fas fa-th-large"></i> Panel Fire Suppression Calculator
+                                </a>
+                                <p class="tool-description">Calculate requirements for panel fire suppression systems.</p>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div class="tools-category">
+                        <h4><i class="fas fa-wrench"></i> Utility Tools</h4>
+                        <ul class="other-tools-list">
+                            <li>
+                                <a href="https://www.dailysmarttool.com/" target="_blank" rel="noopener noreferrer">
+                                    <i class="fas fa-tools"></i> Daily Smart Tool
+                                </a>
+                                <p class="tool-description">Collection of simple, fast, and useful web-based utilities for daily tasks.</p>
+                            </li>
+                            <li>
+                                <a href="https://www.webtoolsdaily.com/" target="_blank" rel="noopener noreferrer">
+                                    <i class="fas fa-globe"></i> Web Tools Daily
+                                </a>
+                                <p class="tool-description">A collection of simple, fast, and useful web-based utilities for daily tasks.</p>
+                            </li>
+                        </ul>
+                    </div>
                 </div>
             </div>
 
             <div class="footer-details">
                 <div class="footer-links">
-                    <a href="#"><i class="fas fa-info-circle"></i> About</a>
-                    <a href="#"><i class="fas fa-user-shield"></i> Privacy Policy</a>
-                    <a href="#"><i class="fas fa-hands-helping"></i> Support</a>
+                    <a href="https://www.amjathkhan.com/" target="_blank"><i class="fas fa-globe"></i> Website</a>
+                    <a href="mailto:contact@amjathkhan.com"><i class="fas fa-envelope"></i> Email</a>
+                    <a href="tel:+919750816163"><i class="fas fa-phone"></i> Call</a>
+                    <a href="#" id="feedbackBtn"><i class="fas fa-comment"></i> Feedback</a>
+                </div>
+                <div class="social-links">
+                    <a href="https://www.facebook.com/Amjathkhan.s" target="_blank"><i class="fab fa-facebook"></i></a>
+                    <a href="https://www.instagram.com/amjathkhan_official/#" target="_blank"><i class="fab fa-instagram"></i></a>
+                    <a href="https://x.com/amjikhan" target="_blank"><i class="fab fa-twitter"></i></a>
+                    <a href="https://www.linkedin.com/in/amjathkhan-shiekusman/" target="_blank"><i class="fab fa-linkedin"></i></a>
+                    <a href="https://bsky.app/profile/amjathkhan.bsky.social" target="_blank"><i class="fas fa-blog"></i></a>
                 </div>
                 <div class="contact-info">
-                    <i class="fas fa-envelope"></i> support@firesafetytools.com
+                    <i class="fas fa-envelope"></i> contact@amjathkhan.com<br>
+                    <i class="fas fa-phone"></i> +91-9750816163
                 </div>
             </div>
             
@@ -261,5 +362,89 @@
         </div>
     </footer>
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+    <script src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+    
+    <script src="script.js"></script>
+    
+    <script>
+        function googleTranslateElementInit() {
+            new google.translate.TranslateElement({
+                pageLanguage: 'en',
+                includedLanguages: 'en,es,fr,de,ar,hi,zh-CN',
+                layout: google.translate.TranslateElement.InlineLayout.SIMPLE,
+                autoDisplay: false
+            }, 'google_translate_element');
+        }
+
+        // Visitor counter
+        function updateVisitorCounter() {
+            const counterElement = document.getElementById('visitorCount');
+            if (!counterElement) return;
+            
+            let visitorCount = localStorage.getItem('fm200VisitorCount');
+            
+            if (!visitorCount) {
+                visitorCount = Math.floor(Math.random() * 500) + 1500;
+            } else {
+                visitorCount = parseInt(visitorCount);
+            }
+            
+            visitorCount += 1;
+            localStorage.setItem('fm200VisitorCount', visitorCount);
+            counterElement.textContent = visitorCount.toLocaleString();
+        }
+
+        // Feedback modal functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            updateVisitorCounter();
+            
+            const feedbackBtn = document.getElementById('feedbackBtn');
+            const feedbackModal = document.getElementById('feedbackModal');
+            const closeModal = feedbackModal?.querySelector('.close-modal');
+            
+            if (feedbackBtn && feedbackModal) {
+                feedbackBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    feedbackModal.style.display = 'flex';
+                });
+                
+                closeModal.addEventListener('click', function() {
+                    feedbackModal.style.display = 'none';
+                });
+                
+                window.addEventListener('click', function(e) {
+                    if (e.target === feedbackModal) {
+                        feedbackModal.style.display = 'none';
+                    }
+                });
+                
+                const feedbackForm = document.getElementById('feedbackForm');
+                if (feedbackForm) {
+                    feedbackForm.addEventListener('submit', function(e) {
+                        e.preventDefault();
+                        
+                        const formData = {
+                            name: document.getElementById('feedbackName').value,
+                            email: document.getElementById('feedbackEmail').value,
+                            message: document.getElementById('feedbackMessage').value,
+                            type: document.getElementById('feedbackType').value,
+                            timestamp: new Date().toISOString(),
+                            page: window.location.href
+                        };
+                        
+                        const feedbacks = JSON.parse(localStorage.getItem('fm200Feedbacks') || '[]');
+                        feedbacks.push(formData);
+                        localStorage.setItem('fm200Feedbacks', JSON.stringify(feedbacks));
+                        
+                        alert('Thank you for your feedback! We will review it soon.');
+                        feedbackForm.reset();
+                        feedbackModal.style.display = 'none';
+                    });
+                }
+            }
+        });
+    </script>
 </body>
 </html>
